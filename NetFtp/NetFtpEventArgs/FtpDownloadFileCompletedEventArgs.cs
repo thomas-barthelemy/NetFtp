@@ -4,16 +4,16 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class DownloadFileCompletedEventArgs : EventArgs
+    public class FtpDownloadFileCompletedEventArgs : EventArgs
     {
-        public DownloadFileCompletedEventArgs(long totalBytesReceived,
+        public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
             TransmissionState transmissionState)
         {
             TotalBytesReceived = totalBytesReceived;
             TransmissionState = transmissionState;
         }
 
-        public DownloadFileCompletedEventArgs(long totalBytesReceived,
+        public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
             TransmissionState transmissionState,
             WebException webException)
         {
@@ -22,7 +22,7 @@ namespace NetFtp.NetFtpEventArgs
             WebException = webException;
         }
 
-        public DownloadFileCompletedEventArgs(long totalBytesReceived,
+        public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
             TransmissionState transmissionState,
             Exception exception)
         {

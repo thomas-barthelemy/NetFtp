@@ -3,16 +3,16 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class UploadProgressChangedEventArgs : EventArgs
+    public class FtpUploadProgressChangedEventArgs : EventArgs
     {
-        public UploadProgressChangedEventArgs(long bytesSent, long totalBytes)
+        public FtpUploadProgressChangedEventArgs(long bytesSent, long totalBytes)
         {
             TransmissionState = TransmissionState.Uploading;
             BytesSent = bytesSent;
             TotalBytes = totalBytes;
         }
 
-        public UploadProgressChangedEventArgs(TransmissionState transmissionState)
+        public FtpUploadProgressChangedEventArgs(TransmissionState transmissionState)
         {
             TransmissionState = transmissionState;
             BytesSent = 0L;

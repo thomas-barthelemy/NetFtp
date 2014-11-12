@@ -3,7 +3,7 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class FileExistsCompletedEventArgs
+    public class FtpFileExistsCompletedEventArgs
     {
         public bool FileExists { get; set; }
         public Exception Exception { get; set; }

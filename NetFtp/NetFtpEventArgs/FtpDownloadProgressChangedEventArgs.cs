@@ -3,9 +3,9 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class DownloadProgressChangedEventArgs : EventArgs
+    public class FtpDownloadProgressChangedEventArgs : EventArgs
     {
-        public DownloadProgressChangedEventArgs(long bytesReceived,
+        public FtpDownloadProgressChangedEventArgs(long bytesReceived,
             long totalBytes)
         {
             BytesReceived = bytesReceived;

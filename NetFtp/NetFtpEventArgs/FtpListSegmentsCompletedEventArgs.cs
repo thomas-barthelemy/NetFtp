@@ -4,9 +4,9 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class ListSegmentsCompletedEventArgs : EventArgs
+    public class FtpListSegmentsCompletedEventArgs : EventArgs
     {
-        public ListSegmentsCompletedEventArgs(IList<FtpFile> ftpFiles)
+        public FtpListSegmentsCompletedEventArgs(IList<FtpFile> ftpFiles)
         {
             FtpFiles = ftpFiles;
         }

@@ -4,9 +4,9 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
-    public class UploadFileCompletedEventArgs : EventArgs
+    public class FtpUploadFileCompletedEventArgs : EventArgs
     {
-        public UploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
             TransmissionState transmissionState)
         {
             TotalBytesSend = totalBytesSend;
@@ -15,7 +15,7 @@ namespace NetFtp.NetFtpEventArgs
             Exception = null;
         }
 
-        public UploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
             TransmissionState transmissionState,
             WebException webException)
         {
@@ -25,7 +25,7 @@ namespace NetFtp.NetFtpEventArgs
             Exception = null;
         }
 
-        public UploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
             TransmissionState transmissionState,
             Exception exception)
         {
