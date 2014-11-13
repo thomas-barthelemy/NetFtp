@@ -89,48 +89,38 @@ namespace NetFtp
 
         public event EventHandler<FtpListSegmentsCompletedEventArgs> ListSegmentsCompleted;
 
+        protected void OnListSegmentsCompleted(FtpListSegmentsCompletedEventArgs arg)
+        {
+            if (ListSegmentsCompleted == null) return;
+            ListSegmentsCompleted(this, arg);
+        }
+
         public IList<FtpFile> ListSegments(string remoteDirectory)
         {
             if (remoteDirectory == null)
                 remoteDirectory = "";
             List<FtpFile> list;
-            try
+            var uri = new UriBuilder("ftp", Host, Port, remoteDirectory).Uri;
+
+            var ftpWebRequest = (FtpWebRequest) WebRequest.Create(uri);
+            ftpWebRequest.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
+            ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
+            ftpWebRequest.UsePassive = UsePassive;
+            ftpWebRequest.Timeout = TimeOut;
+            ftpWebRequest.KeepAlive = KeepAlive;
+            using (var ftpWebResponse = (FtpWebResponse) ftpWebRequest.GetResponse())
             {
-                var uri = new Uri("ftp://" + _host + ":" + Port + "/" +
-                                  remoteDirectory);
-                var ftpWebRequest = (FtpWebRequest) WebRequest.Create(uri);
-                ftpWebRequest.Method = "LIST";
-                ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-                ftpWebRequest.UsePassive = UsePassive;
-                ftpWebRequest.Timeout = TimeOut;
-                ftpWebRequest.KeepAlive = KeepAlive;
-                using (var ftpWebResponse = (FtpWebResponse) ftpWebRequest.GetResponse())
+                var responseStream = ftpWebResponse.GetResponseStream();
+                if (responseStream == null)
+                    throw new WebException("Response stream was not received properly");
+                using (var streamReader = new StreamReader(responseStream))
                 {
-                    var responseStream = ftpWebResponse.GetResponseStream();
-                    if (responseStream == null)
-                        throw new WebException("Response stream was not received properly");
-                    using (
-                        var streamReader = new StreamReader(responseStream, Encoding.UTF8)
-                        )
-                    {
-                        var str = streamReader.ReadToEnd();
-                        list = FtpListUtil.Parse(str.Split('\n'));
-                    }
+                    var str = streamReader.ReadToEnd();
+                    list = FtpListUtil.Parse(str.Split('\n'));
                 }
             }
-            catch (WebException ex)
-            {
-                ListSegmentsCompleted(this, new FtpListSegmentsCompletedEventArgs(null)
-                {
-                   // TODO: on error
-                });
-                Console.WriteLine(ex);
-                list = null;
-            }
-            ListSegmentsCompleted(this, new FtpListSegmentsCompletedEventArgs
-                (
-                list
-                ));
+
+            OnListSegmentsCompleted(new FtpListSegmentsCompletedEventArgs(list));
             return list;
         }
 
@@ -453,7 +443,8 @@ namespace NetFtp
                     if (responseStream == null)
                         throw new WebException("Response stream was not received properly");
                     if (fileStream == null)
-                        throw new IOException("Local file stream was not received properly");
+                        throw new IOException(
+                            "Local file stream was not received properly");
                     var buffer = new byte[128000];
                     var count = responseStream.Read(buffer, 0, 128000);
                     num1 = num2 + count;
@@ -557,7 +548,7 @@ namespace NetFtp
         {
             remoteDirectory = remoteDirectory.Replace("///", "/");
             remoteDirectory = remoteDirectory.Replace("//", "/");
-            var strArray = remoteDirectory.Split(new [] {'/'},
+            var strArray = remoteDirectory.Split(new[] {'/'},
                 StringSplitOptions.RemoveEmptyEntries);
             var remoteDirectory1 = string.Empty;
             foreach (var str in strArray)
@@ -610,44 +601,44 @@ namespace NetFtp
 
         public void Abort()
         {
-                _abort = true;
-                _thread.Abort();
+            _abort = true;
+            _thread.Abort();
         }
 
         private void DoListAsync(object threadParameters)
         {
-                ListSegments(
-                    ((FtpThreadTransferParameters) threadParameters).RemoteDirectory);
+            ListSegments(
+                ((FtpThreadTransferParameters) threadParameters).RemoteDirectory);
         }
 
         private void DoUploadResumeAsync(object threadParameters)
         {
-                var param = (FtpThreadTransferParameters) threadParameters;
-                UploadResume(param.LocalDirectory,
-                    param.LocalFilename,
-                    param.RemoteDirectory, param.RemoteFilename);
+            var param = (FtpThreadTransferParameters) threadParameters;
+            UploadResume(param.LocalDirectory,
+                param.LocalFilename,
+                param.RemoteDirectory, param.RemoteFilename);
         }
 
         private void DoUploadAsync(object threadParameters)
         {
-                var param = (FtpThreadTransferParameters) threadParameters;
-                Upload(param.LocalDirectory, param.LocalFilename,
-                    param.RemoteDirectory, param.RemoteFilename);
+            var param = (FtpThreadTransferParameters) threadParameters;
+            Upload(param.LocalDirectory, param.LocalFilename,
+                param.RemoteDirectory, param.RemoteFilename);
         }
 
         private void DoDownloadAsync(object threadParameters)
         {
-                var param = (FtpThreadTransferParameters) threadParameters;
-                Download(param.LocalDirectory, param.LocalFilename,
-                    param.RemoteDirectory, param.RemoteFilename);
+            var param = (FtpThreadTransferParameters) threadParameters;
+            Download(param.LocalDirectory, param.LocalFilename,
+                param.RemoteDirectory, param.RemoteFilename);
         }
 
         private void DoDownloadResumeAsync(object threadParameters)
         {
-                var param = (FtpThreadTransferParameters) threadParameters;
-                DownloadResume(param.LocalDirectory,
-                    param.LocalFilename,
-                    param.RemoteDirectory, param.RemoteFilename);
+            var param = (FtpThreadTransferParameters) threadParameters;
+            DownloadResume(param.LocalDirectory,
+                param.LocalFilename,
+                param.RemoteDirectory, param.RemoteFilename);
         }
 
         private void SetHost(string host)
