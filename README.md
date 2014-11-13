@@ -1,4 +1,4 @@
 NetFtp
 ======
 
-A portable .NET FTP library with progress notification events
+A .NET FTP library with progress notification events
