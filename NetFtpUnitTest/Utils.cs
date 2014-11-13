@@ -13,5 +13,10 @@
 
         internal const string FtpDirToList = "/";
 
+        internal const string LocalDir = "d:\\tmp";
+        internal const string LocalFile = "test.zip";
+        internal const string InvalidLocalFile = "thisFileDoesNot.exist";
+        internal const string RemoteDir = "/UploadTest/";
+        internal const string RemoteFile = "remoteTest.zip";
     }
 }
