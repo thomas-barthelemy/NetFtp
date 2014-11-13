@@ -110,10 +110,11 @@ namespace NetFtp
             _host = !host.ToLower().StartsWith("ftp://") ? host : _host.Substring(6);
         }
 
-        private FtpWebRequest CreateDefaultFtpRequest(string remoteDirectory, string ftpMethod)
+        private FtpWebRequest CreateDefaultFtpRequest(string remoteDirectory,
+            string ftpMethod)
         {
             var uri = new UriBuilder("ftp", Host, Port, remoteDirectory).Uri;
-            var ftpWebRequest = (FtpWebRequest)WebRequest.Create(uri);
+            var ftpWebRequest = (FtpWebRequest) WebRequest.Create(uri);
 
             ftpWebRequest.Method = ftpMethod;
             ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
@@ -125,19 +126,17 @@ namespace NetFtp
         }
 
         #endregion
-        
+
         #region FTP functions
 
         #region Ftp LIST function
 
         public IList<FtpFile> ListSegments(string remoteDirectory)
         {
-            if (remoteDirectory == null)
-                remoteDirectory = "";
             List<FtpFile> list;
 
             var ftpWebRequest = CreateDefaultFtpRequest(remoteDirectory,
-                    WebRequestMethods.Ftp.ListDirectoryDetails);
+                WebRequestMethods.Ftp.ListDirectoryDetails);
 
             using (var ftpWebResponse = (FtpWebResponse) ftpWebRequest.GetResponse())
             {
@@ -157,25 +156,20 @@ namespace NetFtp
 
         public void ListSegmentsAsync(string remoteDirectory)
         {
-            var threadParameters = new FtpThreadTransferParameters(remoteDirectory);
-            _thread = new Thread(DoListAsync)
+            _thread = new Thread(() => ListSegments(remoteDirectory))
             {
-                Name = "ListThread",
+                Name = ThreadNames.ListThreadName,
                 IsBackground = true,
                 Priority = ThreadPriority.Normal
             };
-            _thread.Start(threadParameters);
-        }
-
-        private void DoListAsync(object threadParameters)
-        {
-            ListSegments(
-                ((FtpThreadTransferParameters)threadParameters).RemoteDirectory);
+            _thread.Start();
         }
 
         #endregion
 
-
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void Upload(string localDirectory, string localFilename,
             string remoteDirectory, string remoteFileName)
@@ -239,6 +233,9 @@ namespace NetFtp
             }
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public void UploadAsync(string localDirectory, string localFilename,
             string remoteDirectory,
             string remoteFileName)
@@ -254,6 +251,9 @@ namespace NetFtp
             _thread.Start(threadParameters);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void UploadResume(string localDirectory, string localFilename,
             string remoteDirectory,
@@ -335,6 +335,9 @@ namespace NetFtp
             }
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public void UploadResumeAsync(string localDirectory, string localFilename,
             string remoteDirectory,
             string remoteFileName)
@@ -350,6 +353,9 @@ namespace NetFtp
             _thread.Start(threadParameters);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void Download(string localDirectory, string localFilename,
             string remoteDirectory, string remoteFileName)
@@ -405,6 +411,9 @@ namespace NetFtp
             }
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public void DownloadAsync(string localDirectory, string localFilename,
             string remoteDirectory,
             string remoteFileName)
@@ -420,6 +429,9 @@ namespace NetFtp
             _thread.Start(threadParameters);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void DownloadResume(string localDirectory, string localFilename,
             string remoteDirectory,
@@ -512,6 +524,9 @@ namespace NetFtp
             }
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void DownloadResumeAsync(string localDirectory, string localFilename,
             string remoteDirectory,
@@ -528,6 +543,9 @@ namespace NetFtp
             _thread.Start(threadParameters);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public FtpFileExistsCompletedEventArgs FileExists(string remoteDirectory,
             string remoteFileName)
         {
@@ -582,6 +600,9 @@ namespace NetFtp
             };
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public bool CreateDirectoryRecursive(string remoteDirectory,
             out WebException webException)
         {
@@ -600,6 +621,9 @@ namespace NetFtp
             return DirectoryExits(remoteDirectory1, out webException);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public bool CreateDirectory(string remoteDirectory, out WebException webException)
         {
             if (UploadProgressChanged != null && !_abort)
@@ -628,6 +652,9 @@ namespace NetFtp
             return true;
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public bool DirectoryExits(string remoteDirectory, out WebException webException)
         {
             if (UploadProgressChanged != null && !_abort)
@@ -638,6 +665,9 @@ namespace NetFtp
             return FileExists(remoteDirectory, "").FileExists;
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         public void Abort()
         {
             _abort = true;
@@ -645,6 +675,9 @@ namespace NetFtp
         }
 
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         private void DoUploadResumeAsync(object threadParameters)
         {
             var param = (FtpThreadTransferParameters) threadParameters;
@@ -653,6 +686,9 @@ namespace NetFtp
                 param.RemoteDirectory, param.RemoteFilename);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         private void DoUploadAsync(object threadParameters)
         {
             var param = (FtpThreadTransferParameters) threadParameters;
@@ -660,6 +696,9 @@ namespace NetFtp
                 param.RemoteDirectory, param.RemoteFilename);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         private void DoDownloadAsync(object threadParameters)
         {
             var param = (FtpThreadTransferParameters) threadParameters;
@@ -667,6 +706,9 @@ namespace NetFtp
                 param.RemoteDirectory, param.RemoteFilename);
         }
 
+        [Obsolete(
+            "Legacy function, will be refactored in next version. Method Signature won't change"
+            )]
         private void DoDownloadResumeAsync(object threadParameters)
         {
             var param = (FtpThreadTransferParameters) threadParameters;
@@ -676,6 +718,5 @@ namespace NetFtp
         }
 
         #endregion
-
     }
 }

@@ -46,6 +46,7 @@
     <Compile Include="NetFtpEventArgs\FtpUploadFileCompletedEventArgs.cs" />
     <Compile Include="NetFtpEventArgs\FtpUploadProgressChangedEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\FtpFile.cs" />
     <Compile Include="Utils\FtpListUtil.cs" />
     <Compile Include="Utils\FtpThreadTransferParameter.cs" />
