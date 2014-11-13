@@ -133,8 +133,9 @@ namespace NetFtp
             return CreateDefaultFtpRequest(ftpMethod, builder.ToString());
         }
 
-        private FtpWebRequest CreateDefaultFtpRequest(string remoteDirectory,
-            string ftpMethod)
+        private FtpWebRequest CreateDefaultFtpRequest(string ftpMethod,
+            string remoteDirectory
+            )
         {
             var uri = new UriBuilder("ftp", Host, Port, remoteDirectory).Uri;
             var ftpWebRequest = (FtpWebRequest) WebRequest.Create(uri);
@@ -282,10 +283,17 @@ namespace NetFtp
 
         #region Ftp STOR function
 
-        public void Upload(string localDirectory, string localFilename,
+        public FtpUploadFileCompletedEventArgs Upload(string localDirectory, string localFilename,
             string remoteDirectory, string remoteFileName)
         {
             _abort = false;
+            var fileInfo = new FileInfo(Path.Combine(localDirectory, localFilename));
+            
+            if(!fileInfo.Exists)
+                throw new FileNotFoundException(
+                    "Could not find the specified local file to upload",
+                    fileInfo.FullName);
+
             var totalBytesSent = 0L;
             try
             {
@@ -295,15 +303,14 @@ namespace NetFtp
                         remoteDirectory,
                         remoteFileName);
 
-                if (!DirectoryExits(remoteDirectory)) { }
+                if (!DirectoryExits(remoteDirectory))
                     CreateDirectoryRecursive(remoteDirectory);
 
                 using (var requestStream = ftpWebRequest.GetRequestStream())
                 {
                     using (
                         var fileStream =
-                            new FileStream(
-                                Path.Combine(localDirectory, localFilename),
+                            new FileStream(fileInfo.FullName,
                                 FileMode.Open,
                                 FileAccess.Read,
                                 FileShare.Read))
@@ -318,7 +325,7 @@ namespace NetFtp
                             requestStream.Write(buffer, 0, bytesSent);
 
                             if (_abort)
-                                return;
+                                return new FtpUploadFileCompletedEventArgs(totalBytesSent, TransmissionState.Aborted);
 
                             OnUploadProgressChanged(new FtpUploadProgressChangedEventArgs(
                                 fileStream.Position, fileStream.Length));
@@ -326,13 +333,17 @@ namespace NetFtp
                         totalBytesSent = fileStream.Length;
                     }
                 }
-                OnUploadFileCompleted(new FtpUploadFileCompletedEventArgs(totalBytesSent,
-                    TransmissionState.Success));
+                var result = new FtpUploadFileCompletedEventArgs(totalBytesSent,
+                    TransmissionState.Success);
+                OnUploadFileCompleted(result);
+                return result;
             }
             catch (WebException ex)
             {
-                OnUploadFileCompleted(new FtpUploadFileCompletedEventArgs(totalBytesSent,
-                        TransmissionState.Failed, ex));
+                var result = new FtpUploadFileCompletedEventArgs(totalBytesSent,
+                    TransmissionState.Failed, ex);
+                OnUploadFileCompleted(result);
+                return result;
             }
         }
 

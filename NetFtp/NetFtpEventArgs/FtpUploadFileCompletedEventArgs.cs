@@ -6,36 +6,36 @@ namespace NetFtp.NetFtpEventArgs
 {
     public class FtpUploadFileCompletedEventArgs : EventArgs
     {
-        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSent,
             TransmissionState transmissionState)
         {
-            TotalBytesSend = totalBytesSend;
+            TotalBytesSent = totalBytesSent;
             TransmissionState = transmissionState;
             WebException = null;
             Exception = null;
         }
 
-        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSent,
             TransmissionState transmissionState,
             WebException webException)
         {
-            TotalBytesSend = totalBytesSend;
+            TotalBytesSent = totalBytesSent;
             TransmissionState = transmissionState;
             WebException = webException;
             Exception = null;
         }
 
-        public FtpUploadFileCompletedEventArgs(long totalBytesSend,
+        public FtpUploadFileCompletedEventArgs(long totalBytesSent,
             TransmissionState transmissionState,
             Exception exception)
         {
-            TotalBytesSend = totalBytesSend;
+            TotalBytesSent = totalBytesSent;
             TransmissionState = transmissionState;
             WebException = null;
             Exception = exception;
         }
 
-        public long TotalBytesSend { get; private set; }
+        public long TotalBytesSent { get; private set; }
 
         public TransmissionState TransmissionState { get; set; }
 

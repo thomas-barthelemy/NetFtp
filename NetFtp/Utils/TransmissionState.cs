@@ -2,11 +2,12 @@
 {
     public enum TransmissionState
     {
-        Success,
         Failed,
+        Success,
         LocalFileBiggerAsRemoteFile,
         ProofingDirExits,
         CreatingDir,
         Uploading,
+        Aborted
     }
 }

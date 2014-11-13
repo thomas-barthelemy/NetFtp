@@ -105,20 +105,19 @@ namespace NetFtp.Utils
         {
             var ftpFile = new FtpFile();
             var str = record.Trim();
+
             ftpFile.Flags = str.Substring(0, 9);
             ftpFile.IsDirectory = ftpFile.Flags[0] == 100;
-            var s1 = str.Substring(11).Trim();
-            CutSubstringFromStringWithTrim(ref s1, ' ', 0);
-            ftpFile.Owner = CutSubstringFromStringWithTrim(ref s1, ' ', 0);
-            ftpFile.Group = CutSubstringFromStringWithTrim(ref s1, ' ', 0);
+            var remainingToParse = str.Substring(11).Trim();
+            CutSubstringFromStringWithTrim(ref remainingToParse, ' ', 0);
+            ftpFile.Owner = CutSubstringFromStringWithTrim(ref remainingToParse, ' ', 0);
+            ftpFile.Group = CutSubstringFromStringWithTrim(ref remainingToParse, ' ', 0);
             long result;
-            if (long.TryParse(CutSubstringFromStringWithTrim(ref s1, ' ', 0), out result))
+            if (long.TryParse(CutSubstringFromStringWithTrim(ref remainingToParse, ' ', 0), out result))
                 ftpFile.Size = result;
-            var s2 = CutSubstringFromStringWithTrim(ref s1, ' ', 8);
-            ftpFile.CreateTime = s2.Contains(":")
-                ? DateTime.ParseExact(s2, "MMM dd hh:mm", null)
-                : DateTime.ParseExact(s2, "MMM dd yyyy", null);
-            ftpFile.Name = s1;
+            var dateStr = CutSubstringFromStringWithTrim(ref remainingToParse, ' ', 8);
+            ftpFile.CreateTime = DateTime.Parse(dateStr);
+            ftpFile.Name = remainingToParse;
             return ftpFile;
         }
 
