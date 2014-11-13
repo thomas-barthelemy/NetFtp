@@ -155,20 +155,13 @@ namespace NetFtp
 
         public void ListSegmentsAsync(string remoteDirectory)
         {
-            var threadParameters = new FtpThreadTransferParameters(remoteDirectory);
-            _thread = new Thread(DoListAsync)
+            _thread = new Thread(() => ListSegments(remoteDirectory))
             {
-                Name = "ListThread",
+                Name = ThreadNames.ListThreadName,
                 IsBackground = true,
                 Priority = ThreadPriority.Normal
             };
-            _thread.Start(threadParameters);
-        }
-
-        private void DoListAsync(object threadParameters)
-        {
-            ListSegments(
-                ((FtpThreadTransferParameters)threadParameters).RemoteDirectory);
+            _thread.Start();
         }
 
         #endregion
