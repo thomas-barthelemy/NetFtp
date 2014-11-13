@@ -58,6 +58,8 @@ namespace NetFtp
 
         #endregion
 
+        #region Properties
+
         public string UserName { get; set; }
 
         public string Password { get; set; }
@@ -78,6 +80,10 @@ namespace NetFtp
 
         public bool KeepAlive { get; set; }
 
+        #endregion
+
+        #region Events
+
         public event EventHandler<FtpUploadProgressChangedEventArgs> UploadProgressChanged;
 
         public event EventHandler<FtpUploadFileCompletedEventArgs> UploadFileCompleted;
@@ -95,19 +101,44 @@ namespace NetFtp
             ListSegmentsCompleted(this, arg);
         }
 
+        #endregion
+
+        #region Private Helper Methods
+
+        private void SetHost(string host)
+        {
+            _host = !host.ToLower().StartsWith("ftp://") ? host : _host.Substring(6);
+        }
+
+        private FtpWebRequest CreateDefaultFtpRequest(string remoteDirectory, string ftpMethod)
+        {
+            var uri = new UriBuilder("ftp", Host, Port, remoteDirectory).Uri;
+            var ftpWebRequest = (FtpWebRequest)WebRequest.Create(uri);
+
+            ftpWebRequest.Method = ftpMethod;
+            ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
+            ftpWebRequest.UsePassive = UsePassive;
+            ftpWebRequest.Timeout = TimeOut;
+            ftpWebRequest.KeepAlive = KeepAlive;
+
+            return ftpWebRequest;
+        }
+
+        #endregion
+        
+        #region FTP functions
+
+        #region Ftp LIST function
+
         public IList<FtpFile> ListSegments(string remoteDirectory)
         {
             if (remoteDirectory == null)
                 remoteDirectory = "";
             List<FtpFile> list;
-            var uri = new UriBuilder("ftp", Host, Port, remoteDirectory).Uri;
 
-            var ftpWebRequest = (FtpWebRequest) WebRequest.Create(uri);
-            ftpWebRequest.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
-            ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-            ftpWebRequest.UsePassive = UsePassive;
-            ftpWebRequest.Timeout = TimeOut;
-            ftpWebRequest.KeepAlive = KeepAlive;
+            var ftpWebRequest = CreateDefaultFtpRequest(remoteDirectory,
+                    WebRequestMethods.Ftp.ListDirectoryDetails);
+
             using (var ftpWebResponse = (FtpWebResponse) ftpWebRequest.GetResponse())
             {
                 var responseStream = ftpWebResponse.GetResponseStream();
@@ -135,6 +166,15 @@ namespace NetFtp
             };
             _thread.Start(threadParameters);
         }
+
+        private void DoListAsync(object threadParameters)
+        {
+            ListSegments(
+                ((FtpThreadTransferParameters)threadParameters).RemoteDirectory);
+        }
+
+        #endregion
+
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void Upload(string localDirectory, string localFilename,
@@ -198,7 +238,6 @@ namespace NetFtp
                         TransmissionState.Failed, ex));
             }
         }
-
 
         public void UploadAsync(string localDirectory, string localFilename,
             string remoteDirectory,
@@ -605,11 +644,6 @@ namespace NetFtp
             _thread.Abort();
         }
 
-        private void DoListAsync(object threadParameters)
-        {
-            ListSegments(
-                ((FtpThreadTransferParameters) threadParameters).RemoteDirectory);
-        }
 
         private void DoUploadResumeAsync(object threadParameters)
         {
@@ -641,12 +675,7 @@ namespace NetFtp
                 param.RemoteDirectory, param.RemoteFilename);
         }
 
-        private void SetHost(string host)
-        {
-            _host = host;
-            if (!host.ToLower().StartsWith("ftp://"))
-                return;
-            _host = _host.Substring(6);
-        }
+        #endregion
+
     }
 }
