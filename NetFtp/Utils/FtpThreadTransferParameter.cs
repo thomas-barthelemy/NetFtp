@@ -2,11 +2,6 @@
 {
     internal class FtpThreadTransferParameters
     {
-        internal FtpThreadTransferParameters(string remoteDirectory)
-        {
-            RemoteDirectory = remoteDirectory;
-        }
-
         internal FtpThreadTransferParameters(string localDirectory, string localFileName, string remoteDirectory,
             string remoteFileName)
         {

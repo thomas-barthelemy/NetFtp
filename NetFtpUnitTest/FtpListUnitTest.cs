@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NetFtp.Utils;
 
@@ -44,6 +46,24 @@ namespace NetFtpUnitTest
             var ftpFiles = client.ListSegments(null);
 
             CheckFtpfiles(ftpFiles);
+        }
+
+        [TestMethod]
+        public void ListAsyncFtpUnitTest()
+        {
+            var client = FtpClientUnitTest.GetDefaultFtpClient();
+            IList<FtpFile> result = null;
+
+            var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+            client.ListSegmentsCompleted += (sender, args) =>
+            {
+                result = args.FtpFiles;
+                waitHandle.Set();
+            };
+            client.ListSegmentsAsync(Utils.FtpDirToList);
+            waitHandle.WaitOne(TimeSpan.FromSeconds(15));
+
+            CheckFtpfiles(result);
         }
 
     }
