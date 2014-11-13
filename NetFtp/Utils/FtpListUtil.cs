@@ -11,7 +11,7 @@ namespace NetFtp.Utils
         Unknown,
     }
 
-    static class FtpListUtil
+    internal static class FtpListUtil
     {
         public static List<FtpFile> Parse(IList<string> ftpRecords)
         {
@@ -20,9 +20,11 @@ namespace NetFtp.Utils
             foreach (var ftpRecord in ftpRecords)
             {
                 var ftpFile = Parse(ftpRecord);
-                if(ftpFile == null) continue;
 
-                if(ftpFile.Name == "." || ftpFile.Name == "..")
+                if (ftpFile == null
+                    || string.IsNullOrEmpty(ftpFile.Name)
+                    || ftpFile.Name == "."
+                    || ftpFile.Name == "..")
                     continue;
 
                 result.Add(ftpFile);
@@ -36,7 +38,7 @@ namespace NetFtp.Utils
             var ftpFile = new FtpFile();
             var fileListStyle = GuessFileListStyle(ftpRecord);
             if (fileListStyle == FileListStyle.Unknown || string.IsNullOrEmpty(ftpRecord))
-                return ftpFile;
+                return null;
             ftpFile.Name = "..";
             switch (fileListStyle)
             {
@@ -53,7 +55,8 @@ namespace NetFtp.Utils
         private static FtpFile ParseFtpFileFromWindowsStyleRecord(string record)
         {
             var ftpFile = new FtpFile();
-            var strArray1 = record.Trim().Split(" \t".ToCharArray(), 2, StringSplitOptions.RemoveEmptyEntries);
+            var strArray1 = record.Trim()
+                .Split(" \t".ToCharArray(), 2, StringSplitOptions.RemoveEmptyEntries);
             // TODO: Parse other results
             //var date = strArray1[0];
             var str1 = strArray1[1];
@@ -88,9 +91,12 @@ namespace NetFtp.Utils
         private static FileListStyle GuessFileListStyle(string record)
         {
             if (record.Length > 10 &&
-                Regex.IsMatch(record.Substring(0, 10), "(-|d)(-|r)(-|w)(-|x)(-|r)(-|w)(-|x)(-|r)(-|w)(-|x)"))
+                Regex.IsMatch(record.Substring(0, 10),
+                    "(-|d)(-|r)(-|w)(-|x)(-|r)(-|w)(-|x)(-|r)(-|w)(-|x)"))
                 return FileListStyle.UnixStyle;
-            return record.Length > 8 && Regex.IsMatch(record.Substring(0, 8), "[0-9][0-9]-[0-9][0-9]-[0-9][0-9]")
+            return record.Length > 8 &&
+                   Regex.IsMatch(record.Substring(0, 8),
+                       "[0-9][0-9]-[0-9][0-9]-[0-9][0-9]")
                 ? FileListStyle.WindowsStyle
                 : FileListStyle.Unknown;
         }
@@ -108,15 +114,16 @@ namespace NetFtp.Utils
             long result;
             if (long.TryParse(CutSubstringFromStringWithTrim(ref s1, ' ', 0), out result))
                 ftpFile.Size = result;
-            //var s2 = CutSubstringFromStringWithTrim(ref s1, ' ', 8);
-            //FtpFile.CreateTime = s2.Contains(':')
-            //    ? DateTime.ParseExact(s2, "MMM dd hh:mm", null)
-            //    : DateTime.ParseExact(s2, "MMM dd yyyy", null);
+            var s2 = CutSubstringFromStringWithTrim(ref s1, ' ', 8);
+            ftpFile.CreateTime = s2.Contains(":")
+                ? DateTime.ParseExact(s2, "MMM dd hh:mm", null)
+                : DateTime.ParseExact(s2, "MMM dd yyyy", null);
             ftpFile.Name = s1;
             return ftpFile;
         }
 
-        private static string CutSubstringFromStringWithTrim(ref string s, char c, int startIndex)
+        private static string CutSubstringFromStringWithTrim(ref string s, char c,
+            int startIndex)
         {
             var num = s.IndexOf(c, startIndex);
             var str = s.Substring(0, num);
