@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetFtp", "NetFtp\NetFtp.csproj", "{F482789F-31FB-4E25-B228-FF96A082F371}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetFtpUnitTest", "NetFtpUnitTest\NetFtpUnitTest.csproj", "{29225269-26EC-4042-9291-7B961ECDC0DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F482789F-31FB-4E25-B228-FF96A082F371}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F482789F-31FB-4E25-B228-FF96A082F371}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F482789F-31FB-4E25-B228-FF96A082F371}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F482789F-31FB-4E25-B228-FF96A082F371}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29225269-26EC-4042-9291-7B961ECDC0DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29225269-26EC-4042-9291-7B961ECDC0DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29225269-26EC-4042-9291-7B961ECDC0DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29225269-26EC-4042-9291-7B961ECDC0DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
