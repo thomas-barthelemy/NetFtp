@@ -86,7 +86,19 @@ namespace NetFtp
 
         public event EventHandler<FtpUploadProgressChangedEventArgs> UploadProgressChanged;
 
+        protected void OnUploadProgressChanged(FtpUploadProgressChangedEventArgs args)
+        {
+            if (UploadProgressChanged == null) return;
+            UploadProgressChanged(this, args);
+        }
+
         public event EventHandler<FtpUploadFileCompletedEventArgs> UploadFileCompleted;
+
+        protected void OnUploadFileCompleted(FtpUploadFileCompletedEventArgs args)
+        {
+            if (UploadFileCompleted == null) return;
+            UploadFileCompleted(this, args);
+        }
 
         public event EventHandler<FtpDownloadProgressChangedEventArgs>
             DownloadProgressChanged;
@@ -167,9 +179,6 @@ namespace NetFtp
 
         #endregion
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void Upload(string localDirectory, string localFilename,
             string remoteDirectory, string remoteFileName)
@@ -233,22 +242,20 @@ namespace NetFtp
             }
         }
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
-        public void UploadAsync(string localDirectory, string localFilename,
+        public void UploadAsync(string localDirectory,
+            string localFilename,
             string remoteDirectory,
             string remoteFileName)
         {
-            var threadParameters = new FtpThreadTransferParameters(localDirectory,
-                localFilename, remoteDirectory, remoteFileName);
-            _thread = new Thread(DoUploadAsync)
-            {
-                Name = "UploadThread",
-                IsBackground = true,
-                Priority = ThreadPriority.Normal
-            };
-            _thread.Start(threadParameters);
+            _thread =
+                new Thread(() => Upload(localDirectory, localFilename, remoteDirectory,
+                    remoteFileName))
+                {
+                    Name = ThreadNames.UploadThreadName,
+                    IsBackground = true,
+                    Priority = ThreadPriority.Normal
+                };
+            _thread.Start();
         }
 
         [Obsolete(
@@ -543,25 +550,19 @@ namespace NetFtp
             _thread.Start(threadParameters);
         }
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
         public FtpFileExistsCompletedEventArgs FileExists(string remoteDirectory,
             string remoteFileName)
         {
-            var remFileSize = 0L;
-            var ftpWebRequest =
-                (FtpWebRequest)
-                    WebRequest.Create(
-                        new Uri("ftp://" + _host + ":" + Port + "/" + remoteDirectory +
-                                "/" +
-                                remoteFileName));
-            ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-            ftpWebRequest.Timeout = TimeOut;
-            ftpWebRequest.Proxy = null;
-            ftpWebRequest.UsePassive = UsePassive;
-            ftpWebRequest.KeepAlive = KeepAlive;
-            ftpWebRequest.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
+            var builder = new StringBuilder(remoteDirectory);
+            if (!remoteDirectory.EndsWith("/"))
+                builder.Append("/");
+            builder.Append(remoteFileName);
+
+            var ftpWebRequest = CreateDefaultFtpRequest(builder.ToString(),
+                WebRequestMethods.Ftp.ListDirectoryDetails);
+
+            long remFileSize;
+
             try
             {
                 using (var ftpWebResponse = (FtpWebResponse) ftpWebRequest.GetResponse())
@@ -570,7 +571,7 @@ namespace NetFtp
                     if (responseStream == null)
                         throw new WebException("Response stream was not received properly");
                     using (
-                        var streamReader = new StreamReader(responseStream, Encoding.ASCII)
+                        var streamReader = new StreamReader(responseStream)
                         )
                     {
                         var str = streamReader.ReadToEnd();
@@ -584,14 +585,8 @@ namespace NetFtp
             }
             catch (WebException ex)
             {
-                if (ex.Message.Contains("550"))
-                    return new FtpFileExistsCompletedEventArgs {FileExists = false};
-                Console.WriteLine(ex.Message);
-                return new FtpFileExistsCompletedEventArgs
-                {
-                    Exception = ex,
-                    RemotefileSize = remFileSize
-                };
+                Debug.WriteLine(ex.Message);
+                return new FtpFileExistsCompletedEventArgs {Exception = ex};
             }
             return new FtpFileExistsCompletedEventArgs
             {
@@ -600,48 +595,33 @@ namespace NetFtp
             };
         }
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
         public bool CreateDirectoryRecursive(string remoteDirectory,
             out WebException webException)
         {
-            remoteDirectory = remoteDirectory.Replace("///", "/");
-            remoteDirectory = remoteDirectory.Replace("//", "/");
-            var strArray = remoteDirectory.Split(new[] {'/'},
+            while (remoteDirectory.Contains("//"))
+                remoteDirectory = remoteDirectory.Replace("//", "/");
+            
+            var subDirectories = remoteDirectory.Split(new[] { '/' },
                 StringSplitOptions.RemoveEmptyEntries);
-            var remoteDirectory1 = string.Empty;
-            foreach (var str in strArray)
+
+            var createdPath = string.Empty;
+            foreach (var subDirectory in subDirectories)
             {
-                var remoteDirectory2 = remoteDirectory1 + str;
-                CreateDirectory(remoteDirectory2, out webException);
-                Console.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
-                remoteDirectory1 = remoteDirectory2 + "/";
+                createdPath += subDirectory;
+                CreateDirectory(createdPath, out webException);
+                createdPath += "/";
             }
-            return DirectoryExits(remoteDirectory1, out webException);
+            return DirectoryExits(createdPath, out webException);
         }
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
         public bool CreateDirectory(string remoteDirectory, out WebException webException)
         {
-            if (UploadProgressChanged != null && !_abort)
-                UploadProgressChanged(this,
-                    new FtpUploadProgressChangedEventArgs(TransmissionState.CreatingDir));
+            OnUploadProgressChanged(new FtpUploadProgressChangedEventArgs(TransmissionState.CreatingDir));
             webException = null;
             try
             {
-                var ftpWebRequest =
-                    (FtpWebRequest)
-                        WebRequest.Create(
-                            new Uri("ftp://" + _host + ":" + Port + "/" + remoteDirectory));
-                ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-                ftpWebRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
-                ftpWebRequest.Timeout = TimeOut;
-                ftpWebRequest.UsePassive = UsePassive;
-                ftpWebRequest.Proxy = null;
-                ftpWebRequest.KeepAlive = KeepAlive;
+                var ftpWebRequest = CreateDefaultFtpRequest(remoteDirectory,
+                    WebRequestMethods.Ftp.MakeDirectory);
                 ftpWebRequest.GetResponse().Close();
             }
             catch (WebException ex)
@@ -652,9 +632,6 @@ namespace NetFtp
             return true;
         }
 
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
         public bool DirectoryExits(string remoteDirectory, out WebException webException)
         {
             if (UploadProgressChanged != null && !_abort)
@@ -662,7 +639,7 @@ namespace NetFtp
                     new FtpUploadProgressChangedEventArgs(
                         TransmissionState.ProofingDirExits));
             webException = null;
-            return FileExists(remoteDirectory, "").FileExists;
+            return FileExists(remoteDirectory, string.Empty).FileExists;
         }
 
         [Obsolete(
@@ -683,16 +660,6 @@ namespace NetFtp
             var param = (FtpThreadTransferParameters) threadParameters;
             UploadResume(param.LocalDirectory,
                 param.LocalFilename,
-                param.RemoteDirectory, param.RemoteFilename);
-        }
-
-        [Obsolete(
-            "Legacy function, will be refactored in next version. Method Signature won't change"
-            )]
-        private void DoUploadAsync(object threadParameters)
-        {
-            var param = (FtpThreadTransferParameters) threadParameters;
-            Upload(param.LocalDirectory, param.LocalFilename,
                 param.RemoteDirectory, param.RemoteFilename);
         }
 
