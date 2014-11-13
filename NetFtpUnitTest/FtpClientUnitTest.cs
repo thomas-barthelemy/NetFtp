@@ -10,12 +10,19 @@ namespace NetFtpUnitTest
     public class FtpClientUnitTest
     {
         [TestMethod]
+        public static FtpClient GetDefaultFtpClient()
+        {
+            var client = new FtpClient(Utils.FtpHost, Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
+            return client;
+        }
+
+        [TestMethod]
         public void FtpClientFailHostString()
         {
             Exception result = null;
             try
             {
-                var client = new FtpClient("", Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
+                var client = new FtpClient(string.Empty, Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
                 client.ListSegments(Utils.FtpDirToList);
             }
             catch (Exception ex)
@@ -33,7 +40,7 @@ namespace NetFtpUnitTest
             WebException result = null;
             try
             {
-                var client = new FtpClient("", Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
+                var client = new FtpClient("0.0.0.0", Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
                 client.ListSegments(Utils.FtpDirToList);
             }
             catch (WebException ex)

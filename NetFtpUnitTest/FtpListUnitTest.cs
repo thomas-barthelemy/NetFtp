@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetFtp;
+using NetFtp.Utils;
 
 namespace NetFtpUnitTest
 {
@@ -8,25 +9,14 @@ namespace NetFtpUnitTest
     public class FtpListUnitTest
     {
 
-        [TestMethod]
-        public FtpClient CreateFtpClient()
+        #region Helper Methods
+
+        private static void CheckFtpfiles(ICollection<FtpFile> files)
         {
-            var client = new FtpClient(Utils.FtpHost, Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
-            return client;
-        }
+            Assert.IsNotNull(files);
+            Debug.WriteLine("Files Found: " + files.Count);
 
-
-        [TestMethod]
-        public void ListFtpUnitTest()
-        {
-            var client = CreateFtpClient();
-
-            var ftpFiles = client.ListSegments(Utils.FtpDirToList);
-            Assert.IsNotNull(ftpFiles);
-
-            Debug.WriteLine("Files Found: " + ftpFiles.Count);
-
-            foreach (var ftpFile in ftpFiles)
+            foreach (var ftpFile in files)
             {
                 Assert.IsNotNull(ftpFile);
                 Assert.IsFalse(string.IsNullOrEmpty(ftpFile.Name));
@@ -34,5 +24,27 @@ namespace NetFtpUnitTest
                 Debug.WriteLine(ftpFile.Name);
             }
         }
+
+        #endregion
+
+        [TestMethod]
+        public void ListFtpUnitTest()
+        {
+            var client = FtpClientUnitTest.GetDefaultFtpClient();
+
+            var ftpFiles = client.ListSegments(Utils.FtpDirToList);
+            CheckFtpfiles(ftpFiles);
+        }
+
+        [TestMethod]
+        public void ListNullDirUnitTest()
+        {
+            var client = FtpClientUnitTest.GetDefaultFtpClient();
+
+            var ftpFiles = client.ListSegments(null);
+
+            CheckFtpfiles(ftpFiles);
+        }
+
     }
 }

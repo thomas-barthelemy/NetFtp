@@ -132,8 +132,6 @@ namespace NetFtp
 
         public IList<FtpFile> ListSegments(string remoteDirectory)
         {
-            if (remoteDirectory == null)
-                remoteDirectory = "";
             List<FtpFile> list;
 
             var ftpWebRequest = CreateDefaultFtpRequest(remoteDirectory,
