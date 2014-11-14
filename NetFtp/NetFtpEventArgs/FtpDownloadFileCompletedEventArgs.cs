@@ -9,6 +9,16 @@ namespace NetFtp.NetFtpEventArgs
     /// </summary>
     public class FtpDownloadFileCompletedEventArgs : EventArgs
     {
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FtpDownloadFileCompletedEventArgs" />
+        ///     with the specified state and total number of bytes received.
+        /// </summary>
+        /// <param name="totalBytesReceived">
+        ///     The total number of bytes received during the transfer.
+        /// </param>
+        /// <param name="transmissionState">
+        ///     The state of the transfer.
+        /// </param>
         public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
             TransmissionState transmissionState)
         {
@@ -16,6 +26,21 @@ namespace NetFtp.NetFtpEventArgs
             TransmissionState = transmissionState;
         }
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="FtpDownloadFileCompletedEventArgs" />
+        ///     with the specified state and total number of bytes received.
+        /// </summary>
+        /// <param name="totalBytesReceived">
+        ///     The total number of bytes received during the transfer.
+        /// </param>
+        /// <param name="transmissionState">
+        ///     The state of the transfer.
+        /// </param>
+        /// <param name="webException">
+        ///     An instance of a <see cref="System.Net.WebException"/>
+        ///     that happened during the transfer (or null if no error
+        ///     happened).
+        /// </param>
         public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
             TransmissionState transmissionState,
             WebException webException)
@@ -26,12 +51,12 @@ namespace NetFtp.NetFtpEventArgs
         }
 
         /// <summary>
-        ///     Gets the total number of bytes received
+        ///     Gets the total number of bytes received.
         /// </summary>
         public long TotalBytesReceived { get; private set; }
 
         /// <summary>
-        ///     Gets the status of the transmission
+        ///     Gets the status of the transmission.
         /// </summary>
         public TransmissionState TransmissionState { get; private set; }
 
