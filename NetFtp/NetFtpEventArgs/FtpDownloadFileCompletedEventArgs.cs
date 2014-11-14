@@ -4,6 +4,9 @@ using NetFtp.Utils;
 
 namespace NetFtp.NetFtpEventArgs
 {
+    /// <summary>
+    ///     Provides data for the FtpDownloadFileCompleted event
+    /// </summary>
     public class FtpDownloadFileCompletedEventArgs : EventArgs
     {
         public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
@@ -22,21 +25,20 @@ namespace NetFtp.NetFtpEventArgs
             WebException = webException;
         }
 
-        public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
-            TransmissionState transmissionState,
-            Exception exception)
-        {
-            TotalBytesReceived = totalBytesReceived;
-            TransmissionState = transmissionState;
-            Exception = exception;
-        }
-
+        /// <summary>
+        ///     Gets the total number of bytes received
+        /// </summary>
         public long TotalBytesReceived { get; private set; }
 
-        public TransmissionState TransmissionState { get; set; }
+        /// <summary>
+        ///     Gets the status of the transmission
+        /// </summary>
+        public TransmissionState TransmissionState { get; private set; }
 
+        /// <summary>
+        ///     Gets the WebException if an error happened during the transfer,
+        ///     check exception messange and transmission state for more information.
+        /// </summary>
         public WebException WebException { get; private set; }
-
-        public Exception Exception { get; private set; }
     }
 }
