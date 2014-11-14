@@ -11,7 +11,7 @@ namespace NetFtpUnitTest
     public class FtpStorUnitTest
     {
         [TestMethod]
-        public void Upload()
+        public void Upload_ValidParameters_FileUploaded()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
@@ -27,7 +27,7 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void UploadAsync()
+        public void UploadAsync_ValidParameters_FileUploaded()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
             var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
@@ -54,7 +54,7 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void UploadFileNotFound()
+        public void Upload_WrongFileParameter_FileNotFoundException()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
