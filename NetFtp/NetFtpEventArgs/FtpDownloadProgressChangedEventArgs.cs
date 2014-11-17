@@ -11,13 +11,14 @@ namespace NetFtp.NetFtpEventArgs
         /// <summary>
         ///     Initializes a new instance of the
         ///     <see cref="FtpDownloadProgressChangedEventArgs" />
-        ///     with the specified state and total number of bytes received.
+        ///     with the specified bytes received and remote file size.
         /// </summary>
         /// <param name="bytesReceived">
         ///     The number of bytes received so far during the transaction.
         /// </param>
         /// <param name="totalBytes">
-        ///     The total number of bytes of the file being downloaded.
+        ///     The total number of bytes of the file being downloaded
+        ///     (The remote file size).
         /// </param>
         public FtpDownloadProgressChangedEventArgs(long bytesReceived,
             long totalBytes)
@@ -33,6 +34,7 @@ namespace NetFtp.NetFtpEventArgs
 
         /// <summary>
         ///     Gets the total number of bytes of the file being downloaded.
+        ///     (The remote file size).
         /// </summary>
         public long TotalBytes { get; private set; }
 
