@@ -11,31 +11,47 @@ namespace NetFtp.NetFtpEventArgs
         /// <summary>
         ///     Initializes a new instance of the
         ///     <see cref="FtpFileExistsCompletedEventArgs" />
-        ///     with the specified state and total number of bytes received.
+        ///     with the specified file exist status and size.
         /// </summary>
-        /// <param name="fileExists"></param>
-        /// <param name="remoteFileSize"></param>
+        /// <param name="fileExists">
+        ///     Specifies if the file exists on the remote server.
+        /// </param>
+        /// <param name="remoteFileSize">
+        ///     Specifies the remote file size (or 0 if it does not exist).
+        /// </param>
         public FtpFileExistsCompletedEventArgs(bool fileExists, long remoteFileSize)
         {
             FileExists = fileExists;
             RemotefileSize = remoteFileSize;
-
         }
 
+        /// <summary>
+        ///     Initializes a new instance of the
+        ///     <see cref="FtpFileExistsCompletedEventArgs" />
+        ///     with the specified WebException.
+        /// </summary>
+        /// <param name="ex"></param>
         public FtpFileExistsCompletedEventArgs(WebException ex)
         {
-            Exception = ex;
+            WebException = ex;
         }
 
+        /// <summary>
+        ///     Gets if the file exists on the remote server
+        /// </summary>
         public bool FileExists { get; private set; }
-        public WebException Exception { get; private set; }
+
+        /// <summary>
+        ///     Gets
+        /// </summary>
+        public WebException WebException { get; private set; }
         public long RemotefileSize { get; private set; }
 
         public TransmissionState State
         {
             get
             {
-                return Exception == null
+                return WebException == null
                     ? TransmissionState.Success
                     : TransmissionState.Failed;
             }

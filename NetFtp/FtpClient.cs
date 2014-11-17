@@ -177,13 +177,13 @@ namespace NetFtp
         {
             OnUploadProgressChanged(
                 new FtpUploadProgressChangedEventArgs(TransmissionState.CreatingDir));
-            
-                var ftpWebRequest = CreateDefaultFtpRequest(
-                    WebRequestMethods.Ftp.MakeDirectory,
-                    remoteDirectory
-                    );
-                ftpWebRequest.GetResponse().Close();
-            
+
+            var ftpWebRequest = CreateDefaultFtpRequest(
+                WebRequestMethods.Ftp.MakeDirectory,
+                remoteDirectory
+                );
+            ftpWebRequest.GetResponse().Close();
+
             return true;
         }
 
@@ -260,13 +260,9 @@ namespace NetFtp
             catch (WebException ex)
             {
                 Debug.WriteLine(ex.Message);
-                return new FtpFileExistsCompletedEventArgs {Exception = ex};
+                return new FtpFileExistsCompletedEventArgs(ex);
             }
-            return new FtpFileExistsCompletedEventArgs
-            {
-                FileExists = true,
-                RemotefileSize = remFileSize
-            };
+            return new FtpFileExistsCompletedEventArgs(true, remFileSize);
         }
 
         public bool DirectoryExits(string remoteDirectory)
@@ -283,13 +279,14 @@ namespace NetFtp
 
         #region Ftp STOR function
 
-        public FtpUploadFileCompletedEventArgs Upload(string localDirectory, string localFilename,
+        public FtpUploadFileCompletedEventArgs Upload(string localDirectory,
+            string localFilename,
             string remoteDirectory, string remoteFileName)
         {
             _abort = false;
             var fileInfo = new FileInfo(Path.Combine(localDirectory, localFilename));
-            
-            if(!fileInfo.Exists)
+
+            if (!fileInfo.Exists)
                 throw new FileNotFoundException(
                     "Could not find the specified local file to upload",
                     fileInfo.FullName);
@@ -325,7 +322,8 @@ namespace NetFtp
                             requestStream.Write(buffer, 0, bytesSent);
 
                             if (_abort)
-                                return new FtpUploadFileCompletedEventArgs(totalBytesSent, TransmissionState.Aborted);
+                                return new FtpUploadFileCompletedEventArgs(
+                                    totalBytesSent, TransmissionState.Aborted);
 
                             OnUploadProgressChanged(new FtpUploadProgressChangedEventArgs(
                                 fileStream.Position, fileStream.Length));
@@ -446,7 +444,7 @@ namespace NetFtp
         //                TransmissionState.Failed, ex));
         //    }
         //}
-        
+
         //[Obsolete(
         //    "Legacy function, will be refactored in next version. Method Signature won't change"
         //    )]
