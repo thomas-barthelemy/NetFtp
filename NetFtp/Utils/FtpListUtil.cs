@@ -11,7 +11,7 @@ namespace NetFtp.Utils
         Unknown,
     }
 
-    internal static class FtpListUtil
+    internal static class FtpListUtils
     {
         public static List<FtpFile> Parse(IList<string> ftpRecords)
         {

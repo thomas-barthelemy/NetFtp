@@ -27,7 +27,7 @@ namespace NetFtp.NetFtpEventArgs
         {
             get
             {
-                return MathUtil.GetCompletionPercentage(BytesSent, TotalBytes);
+                return MathUtils.GetCompletionPercentage(BytesSent, TotalBytes);
             }
         }
 

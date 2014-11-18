@@ -2,7 +2,7 @@
 
 namespace NetFtp.Utils
 {
-    public static class MathUtil
+    public static class MathUtils
     {
         public static int GetCompletionPercentage(long bytesSent, long totalBytes)
         {

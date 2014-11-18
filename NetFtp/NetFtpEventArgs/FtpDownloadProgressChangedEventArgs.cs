@@ -43,7 +43,7 @@ namespace NetFtp.NetFtpEventArgs
         /// </summary>
         public int Percent
         {
-            get { return MathUtil.GetCompletionPercentage(BytesReceived, TotalBytes); }
+            get { return MathUtils.GetCompletionPercentage(BytesReceived, TotalBytes); }
         }
     }
 }

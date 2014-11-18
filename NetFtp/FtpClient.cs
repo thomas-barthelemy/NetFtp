@@ -208,7 +208,7 @@ namespace NetFtp
                 using (var streamReader = new StreamReader(responseStream))
                 {
                     var str = streamReader.ReadToEnd();
-                    list = FtpListUtil.Parse(str.Split('\n'));
+                    list = FtpListUtils.Parse(str.Split('\n'));
                 }
             }
 
@@ -249,7 +249,7 @@ namespace NetFtp
                         )
                     {
                         var str = streamReader.ReadToEnd();
-                        var ftpFile = FtpListUtil.Parse(str.Split(new[]
+                        var ftpFile = FtpListUtils.Parse(str.Split(new[]
                         {
                             '\n'
                         })[0]);

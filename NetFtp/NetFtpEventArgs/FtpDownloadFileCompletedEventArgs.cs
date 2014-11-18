@@ -62,7 +62,7 @@ namespace NetFtp.NetFtpEventArgs
 
         /// <summary>
         ///     Gets the WebException if an error happened during the transfer,
-        ///     check exception messange and transmission state for more information.
+        ///     check exception message and transmission state for more information.
         /// </summary>
         public WebException WebException { get; private set; }
     }
