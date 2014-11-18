@@ -38,7 +38,7 @@ namespace NetFtpUnitTest
             client.UploadFileCompleted += (sender, args) =>
             {
                 result = args;
-                Assert.IsNull(args.Exception);
+                Assert.IsNull(args.WebException);
                 waitHandle.Set();
             };
 
