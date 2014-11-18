@@ -11,8 +11,16 @@ namespace NetFtp.Utils
         Unknown,
     }
 
-    internal static class FtpListUtil
+    internal static class FtpListUtils
     {
+        /// <summary>
+        ///     Parses a list of string (usually from the result of LIST)
+        ///     as FtpFiles.
+        /// </summary>
+        /// <param name="ftpRecords">
+        ///     A List of string representing lines of a LIST result (segments).
+        /// </param>
+        /// <returns>List of FTP Files</returns>
         public static List<FtpFile> Parse(IList<string> ftpRecords)
         {
             var result = new List<FtpFile>();
@@ -33,6 +41,11 @@ namespace NetFtp.Utils
             return result;
         }
 
+        /// <summary>
+        ///     Parses a single entry as a FtpFile
+        /// </summary>
+        /// <param name="ftpRecord">A string representing a file entry</param>
+        /// <returns>An FtpFile corresponding to the ftpRecord string</returns>
         public static FtpFile Parse(string ftpRecord)
         {
             var ftpFile = new FtpFile();
@@ -52,6 +65,9 @@ namespace NetFtp.Utils
             return ftpFile;
         }
 
+        /// <summary>
+        ///     Parses a record formated as a Windows style FTP 
+        /// </summary>
         private static FtpFile ParseFtpFileFromWindowsStyleRecord(string record)
         {
             var ftpFile = new FtpFile();
@@ -88,6 +104,9 @@ namespace NetFtp.Utils
             return ftpFile;
         }
 
+        /// <summary>
+        ///     Guesses the format of a string record.
+        /// </summary>
         private static FileListStyle GuessFileListStyle(string record)
         {
             if (record.Length > 10 &&
@@ -101,6 +120,9 @@ namespace NetFtp.Utils
                 : FileListStyle.Unknown;
         }
 
+        /// <summary>
+        ///     Parses a record formated as a Unix style FTP
+        /// </summary>
         private static FtpFile ParseFtpFileFromUnixStyleRecord(string record)
         {
             var ftpFile = new FtpFile();
@@ -121,6 +143,14 @@ namespace NetFtp.Utils
             return ftpFile;
         }
 
+        /// <summary>
+        ///     Cuts a string from anything before the first occurrence of the specified
+        ///     character after the specified start index, and trim what is left.
+        /// </summary>
+        /// <returns>
+        ///     The part of the string below the first occurrence of the
+        ///     specified character.
+        /// </returns>
         private static string CutSubstringFromStringWithTrim(ref string s, char c,
             int startIndex)
         {

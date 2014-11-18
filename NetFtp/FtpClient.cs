@@ -60,24 +60,50 @@ namespace NetFtp
 
         #region Properties
 
+        /// <summary>
+        ///     Gets or Sets the Username used to login in the FTP Server.
+        /// </summary>
         public string UserName { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the Password used to login in the FTP Server.
+        /// </summary>
         public string Password { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the Port used to connect to the FTP Server.
+        /// </summary>
         public int Port { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the host address of the FTP Server.
+        /// </summary>
         public string Host
         {
             get { return _host; }
             set { SetHost(value); }
         }
 
+        /// <summary>
+        ///     Gets or Sets the FTP Passive mode feature.
+        /// </summary>
         public bool UsePassive { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the timeout (in ms) for FTP connections
+        ///     (default: 30000 ms)
+        /// </summary>
         public int TimeOut { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the IO timeout (in ms)
+        ///     (default: 30000 ms)
+        /// </summary>
         public int ReadWriteTimeOut { get; set; }
 
+        /// <summary>
+        ///     Gets or Sets the Keep-Alive feature.
+        /// </summary>
         public bool KeepAlive { get; set; }
 
         #endregion
@@ -155,6 +181,14 @@ namespace NetFtp
 
         #region Ftp MKD function
 
+        /// <summary>
+        ///     Creates the specified path (directory and subdirectories)
+        ///     on the FTP Server.
+        /// </summary>
+        /// <param name="remoteDirectory">
+        ///     The path to create.
+        /// </param>
+        /// <returns>Whether the directory was created successfully.</returns>
         public bool CreateDirectoryRecursive(string remoteDirectory)
         {
             while (remoteDirectory.Contains("//"))
@@ -173,17 +207,24 @@ namespace NetFtp
             return DirectoryExits(createdPath);
         }
 
+        /// <summary>
+        ///     Creates the specified directory on the FTP Server.
+        /// </summary>
+        /// <param name="remoteDirectory">
+        ///     The path of the remote directory to create.
+        /// </param>
+        /// <returns>Whether the directory was created successfully</returns>
         public bool CreateDirectory(string remoteDirectory)
         {
             OnUploadProgressChanged(
-                new FtpUploadProgressChangedEventArgs(TransmissionState.CreatingDir));
-            
-                var ftpWebRequest = CreateDefaultFtpRequest(
-                    WebRequestMethods.Ftp.MakeDirectory,
-                    remoteDirectory
-                    );
-                ftpWebRequest.GetResponse().Close();
-            
+                new FtpUploadProgressChangedEventArgs(TransactionState.CreatingDir));
+
+            var ftpWebRequest = CreateDefaultFtpRequest(
+                WebRequestMethods.Ftp.MakeDirectory,
+                remoteDirectory
+                );
+            ftpWebRequest.GetResponse().Close();
+
             return true;
         }
 
@@ -191,6 +232,11 @@ namespace NetFtp
 
         #region Ftp LIST function
 
+        /// <summary>
+        ///     Lists the files and directories on the specified path.
+        /// </summary>
+        /// <param name="remoteDirectory">The path to the directory to list</param>
+        /// <returns>An IList of the FtpFiles in the specified directory</returns>
         public IList<FtpFile> ListSegments(string remoteDirectory)
         {
             List<FtpFile> list;
@@ -208,7 +254,7 @@ namespace NetFtp
                 using (var streamReader = new StreamReader(responseStream))
                 {
                     var str = streamReader.ReadToEnd();
-                    list = FtpListUtil.Parse(str.Split('\n'));
+                    list = FtpListUtils.Parse(str.Split('\n'));
                 }
             }
 
@@ -216,6 +262,10 @@ namespace NetFtp
             return list;
         }
 
+        /// <summary>
+        ///     Lists asynchronously the files and directorties on the specified path.
+        /// </summary>
+        /// <param name="remoteDirectory">The path to the directory to list</param>
         public void ListSegmentsAsync(string remoteDirectory)
         {
             _thread = new Thread(() => ListSegments(remoteDirectory))
@@ -227,6 +277,12 @@ namespace NetFtp
             _thread.Start();
         }
 
+        /// <summary>
+        ///     Checks if the file at the specified path exists.
+        /// </summary>
+        /// <param name="remoteDirectory">The remote path to the directory</param>
+        /// <param name="remoteFileName">The remote file name with it's extension</param>
+        /// <returns><see cref="FtpFileExistsCompletedEventArgs"/></returns>
         public FtpFileExistsCompletedEventArgs FileExists(string remoteDirectory,
             string remoteFileName)
         {
@@ -249,7 +305,7 @@ namespace NetFtp
                         )
                     {
                         var str = streamReader.ReadToEnd();
-                        var ftpFile = FtpListUtil.Parse(str.Split(new[]
+                        var ftpFile = FtpListUtils.Parse(str.Split(new[]
                         {
                             '\n'
                         })[0]);
@@ -260,21 +316,22 @@ namespace NetFtp
             catch (WebException ex)
             {
                 Debug.WriteLine(ex.Message);
-                return new FtpFileExistsCompletedEventArgs {Exception = ex};
+                return new FtpFileExistsCompletedEventArgs(ex);
             }
-            return new FtpFileExistsCompletedEventArgs
-            {
-                FileExists = true,
-                RemotefileSize = remFileSize
-            };
+            return new FtpFileExistsCompletedEventArgs(true, remFileSize);
         }
 
+        /// <summary>
+        ///     Checks if the directory at the specified path exists.
+        /// </summary>
+        /// <param name="remoteDirectory">The path to the remote directory</param>
+        /// <returns>Whether the directory exists</returns>
         public bool DirectoryExits(string remoteDirectory)
         {
             if (UploadProgressChanged != null && !_abort)
                 UploadProgressChanged(this,
                     new FtpUploadProgressChangedEventArgs(
-                        TransmissionState.ProofingDirExits));
+                        TransactionState.ProofingDirExits));
 
             return FileExists(remoteDirectory, string.Empty).FileExists;
         }
@@ -283,13 +340,23 @@ namespace NetFtp
 
         #region Ftp STOR function
 
-        public FtpUploadFileCompletedEventArgs Upload(string localDirectory, string localFilename,
+        /// <summary>
+        ///     Uploads the file at the specified local path
+        ///     to the specified remote FTP path.
+        /// </summary>
+        /// <param name="localDirectory"></param>
+        /// <param name="localFilename"></param>
+        /// <param name="remoteDirectory"></param>
+        /// <param name="remoteFileName"></param>
+        /// <returns><see cref="FtpUploadFileCompletedEventArgs"/></returns>
+        public FtpUploadFileCompletedEventArgs Upload(string localDirectory,
+            string localFilename,
             string remoteDirectory, string remoteFileName)
         {
             _abort = false;
             var fileInfo = new FileInfo(Path.Combine(localDirectory, localFilename));
-            
-            if(!fileInfo.Exists)
+
+            if (!fileInfo.Exists)
                 throw new FileNotFoundException(
                     "Could not find the specified local file to upload",
                     fileInfo.FullName);
@@ -325,7 +392,8 @@ namespace NetFtp
                             requestStream.Write(buffer, 0, bytesSent);
 
                             if (_abort)
-                                return new FtpUploadFileCompletedEventArgs(totalBytesSent, TransmissionState.Aborted);
+                                return new FtpUploadFileCompletedEventArgs(
+                                    totalBytesSent, TransactionState.Aborted);
 
                             OnUploadProgressChanged(new FtpUploadProgressChangedEventArgs(
                                 fileStream.Position, fileStream.Length));
@@ -334,19 +402,27 @@ namespace NetFtp
                     }
                 }
                 var result = new FtpUploadFileCompletedEventArgs(totalBytesSent,
-                    TransmissionState.Success);
+                    TransactionState.Success);
                 OnUploadFileCompleted(result);
                 return result;
             }
             catch (WebException ex)
             {
                 var result = new FtpUploadFileCompletedEventArgs(totalBytesSent,
-                    TransmissionState.Failed, ex);
+                    TransactionState.Failed, ex);
                 OnUploadFileCompleted(result);
                 return result;
             }
         }
 
+        /// <summary>
+        ///     Uploads asynchronously the file at the specified local path
+        ///     to the specifed remote path.
+        /// </summary>
+        /// <param name="localDirectory"></param>
+        /// <param name="localFilename"></param>
+        /// <param name="remoteDirectory"></param>
+        /// <param name="remoteFileName"></param>
         public void UploadAsync(string localDirectory,
             string localFilename,
             string remoteDirectory,
@@ -446,7 +522,7 @@ namespace NetFtp
         //                TransmissionState.Failed, ex));
         //    }
         //}
-        
+
         //[Obsolete(
         //    "Legacy function, will be refactored in next version. Method Signature won't change"
         //    )]
@@ -515,14 +591,14 @@ namespace NetFtp
                 if (DownloadFileCompleted == null || _abort)
                     return;
                 DownloadFileCompleted(this,
-                    new FtpDownloadFileCompletedEventArgs(num, TransmissionState.Success));
+                    new FtpDownloadFileCompletedEventArgs(num, TransactionState.Success));
             }
             catch (WebException ex)
             {
                 if (DownloadFileCompleted != null && !_abort)
                     DownloadFileCompleted(this,
                         new FtpDownloadFileCompletedEventArgs(num,
-                            TransmissionState.Failed, ex));
+                            TransactionState.Failed, ex));
             }
         }
 
@@ -580,7 +656,7 @@ namespace NetFtp
                         {
                             DownloadFileCompleted(this,
                                 new FtpDownloadFileCompletedEventArgs(0L,
-                                    TransmissionState.Success));
+                                    TransactionState.Success));
                             return;
                         }
                     }
@@ -590,7 +666,7 @@ namespace NetFtp
                         {
                             DownloadFileCompleted(this,
                                 new FtpDownloadFileCompletedEventArgs(0L,
-                                    TransmissionState.LocalFileBiggerAsRemoteFile));
+                                    TransactionState.LocalFileBiggerThanRemoteFile));
                             return;
                         }
                     }
@@ -628,14 +704,14 @@ namespace NetFtp
                 if (DownloadFileCompleted != null && !_abort)
                     DownloadFileCompleted(this,
                         new FtpDownloadFileCompletedEventArgs(num1,
-                            TransmissionState.Success));
+                            TransactionState.Success));
             }
             catch (WebException ex)
             {
                 if (DownloadFileCompleted != null && !_abort)
                     DownloadFileCompleted(this,
                         new FtpDownloadFileCompletedEventArgs(num1,
-                            TransmissionState.Failed, ex));
+                            TransactionState.Failed, ex));
             }
         }
 
