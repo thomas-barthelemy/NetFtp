@@ -9,7 +9,6 @@ namespace NetFtpUnitTest
     [TestClass]
     public class FtpClientUnitTest
     {
-        [TestMethod]
         public static FtpClient GetDefaultFtpClient()
         {
             var client = new FtpClient(Utils.FtpHost, Utils.FtpUserName, Utils.FtpPassword, Utils.FtpPort);
@@ -17,7 +16,13 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void FtpClientFailHostString()
+        public void FtpClientConstructor_ValidParams_NoException()
+        {
+            GetDefaultFtpClient();
+        }
+
+        [TestMethod]
+        public void FtpClientConstructor_NoHost_UriFormatException()
         {
             Exception result = null;
             try
@@ -35,7 +40,7 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void FtpClientUnreachableHost()
+        public void FtpClientConstructor_WrongHost_WebExceptionWithConnectFailure()
         {
             WebException result = null;
             try
@@ -54,10 +59,9 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void FtpClientWrongUsername()
+        public void FtpClientConstructor_WrongUsername_WebExceptionWithProtocolError()
         {
             WebException wrongUserResult = null;
-            WebException wrongPassResult = null;
             try
             {
                 var client = new FtpClient(Utils.FtpHost, Utils.FtpWrongUsername, Utils.FtpPassword, Utils.FtpPort);
@@ -68,6 +72,15 @@ namespace NetFtpUnitTest
                 Debug.WriteLine(ex);
                 wrongUserResult = ex;
             }
+
+            Assert.IsNotNull(wrongUserResult);
+            Assert.AreEqual(WebExceptionStatus.ProtocolError, wrongUserResult.Status);
+        }
+
+        [TestMethod]
+        public void FtpClientConstructor_WrongPassword_WebExceptionWithProtocolError()
+        {
+            WebException wrongPassResult = null;
 
             try
             {
@@ -80,10 +93,7 @@ namespace NetFtpUnitTest
                 wrongPassResult = ex;
             }
 
-            Assert.IsNotNull(wrongUserResult);
             Assert.IsNotNull(wrongPassResult);
-
-            Assert.AreEqual(WebExceptionStatus.ProtocolError, wrongUserResult.Status);
             Assert.AreEqual(WebExceptionStatus.ProtocolError, wrongPassResult.Status);
         }
     }

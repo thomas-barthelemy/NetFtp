@@ -30,7 +30,7 @@ namespace NetFtpUnitTest
         #endregion
 
         [TestMethod]
-        public void ListFtpUnitTest()
+        public void ListSegments_ValidParams_ListOfRemoteFiles()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
@@ -39,7 +39,7 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void ListNullDirUnitTest()
+        public void ListSegments_NullDirParam_ListRootRemoteFiles()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
@@ -49,7 +49,7 @@ namespace NetFtpUnitTest
         }
 
         [TestMethod]
-        public void ListAsyncFtpUnitTest()
+        public void ListSegmentsAsync_ValidParams_ListOfRemoteFiles()
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
             IList<FtpFile> result = null;
