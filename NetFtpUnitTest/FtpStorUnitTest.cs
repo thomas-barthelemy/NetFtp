@@ -15,12 +15,11 @@ namespace NetFtpUnitTest
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
-            var localFile = new FileInfo(Path.Combine(Utils.LocalDir, Utils.LocalFile));
+            var localFile = new FileInfo(Utils.LocalPath);
 
-            var result = client.Upload(Utils.LocalDir, Utils.LocalFile, Utils.RemoteDir,
-                Utils.RemoteFile);
+            var result = client.Upload(Utils.LocalPath, Utils.RemotePath);
 
-            var fileExistsResult = client.FileExists(Utils.RemoteDir, Utils.RemoteFile);
+            var fileExistsResult = client.FileExists(Utils.RemotePath);
             Assert.IsTrue(fileExistsResult.FileExists);
             Assert.AreEqual(localFile.Length, fileExistsResult.RemotefileSize);
             Assert.AreEqual(localFile.Length, result.TotalBytesSent);
@@ -31,7 +30,7 @@ namespace NetFtpUnitTest
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
             var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
-            var localFile = new FileInfo(Path.Combine(Utils.LocalDir, Utils.LocalFile));
+            var localFile = new FileInfo(Utils.LocalPath);
 
             FtpUploadFileCompletedEventArgs result = null;
 
@@ -42,12 +41,11 @@ namespace NetFtpUnitTest
                 waitHandle.Set();
             };
 
-            client.UploadAsync(Utils.LocalDir, Utils.LocalFile, Utils.RemoteDir,
-                Utils.RemoteFile);
+            client.UploadAsync(Utils.LocalPath, Utils.RemotePath);
 
             waitHandle.WaitOne(TimeSpan.FromSeconds(15));
 
-            var fileExistsResult = client.FileExists(Utils.RemoteDir, Utils.RemoteFile);
+            var fileExistsResult = client.FileExists(Utils.RemotePath);
             Assert.IsTrue(fileExistsResult.FileExists);
             Assert.AreEqual(localFile.Length, fileExistsResult.RemotefileSize);
             Assert.AreEqual(localFile.Length, result.TotalBytesSent);
@@ -58,7 +56,7 @@ namespace NetFtpUnitTest
         {
             var client = FtpClientUnitTest.GetDefaultFtpClient();
 
-            var localFile = new FileInfo(Path.Combine(Utils.LocalDir, Utils.InvalidLocalFile));
+            var localFile = new FileInfo(Utils.InvalidLocalPath);
             if(localFile.Exists)
                 Assert.Inconclusive("The InvalidLocalFile constant should not point" +
                                     " to a file that exists to test this function");
@@ -66,8 +64,7 @@ namespace NetFtpUnitTest
             Exception ex = null;
             try
             {
-                client.Upload(Utils.LocalDir, Utils.InvalidLocalFile, Utils.RemoteDir,
-                    Utils.RemoteFile);
+                client.Upload(Utils.InvalidLocalPath, Utils.RemotePath);
             }
             catch (Exception e)
             {
