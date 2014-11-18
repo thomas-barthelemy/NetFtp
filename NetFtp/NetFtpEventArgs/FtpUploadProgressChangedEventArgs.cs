@@ -23,7 +23,7 @@ namespace NetFtp.NetFtpEventArgs
         /// </param>
         public FtpUploadProgressChangedEventArgs(long bytesSent, long totalBytes)
         {
-            TransmissionState = TransmissionState.Uploading;
+            TransactionState = TransactionState.Uploading;
             BytesSent = bytesSent;
             TotalBytes = totalBytes;
         }
@@ -33,10 +33,10 @@ namespace NetFtp.NetFtpEventArgs
         ///     <see cref="FtpUploadProgressChangedEventArgs" />
         ///     with the specified transmission State.
         /// </summary>
-        /// <param name="transmissionState"></param>
-        public FtpUploadProgressChangedEventArgs(TransmissionState transmissionState)
+        /// <param name="transactionState"></param>
+        public FtpUploadProgressChangedEventArgs(TransactionState transactionState)
         {
-            TransmissionState = transmissionState;
+            TransactionState = transactionState;
         }
 
         /// <summary>
@@ -63,6 +63,6 @@ namespace NetFtp.NetFtpEventArgs
         /// <summary>
         ///     Gets the state of the transaction
         /// </summary>
-        public TransmissionState TransmissionState { get; private set; }
+        public TransactionState TransactionState { get; private set; }
     }
 }

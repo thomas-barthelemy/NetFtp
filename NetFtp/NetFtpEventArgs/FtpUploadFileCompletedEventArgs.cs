@@ -18,14 +18,14 @@ namespace NetFtp.NetFtpEventArgs
         /// <param name="totalBytesSent">
         ///     The total number of bytes sent during the transaction.
         /// </param>
-        /// <param name="transmissionState">
+        /// <param name="transactionState">
         ///     The state of the transaction.
         /// </param>
         public FtpUploadFileCompletedEventArgs(long totalBytesSent,
-            TransmissionState transmissionState)
+            TransactionState transactionState)
         {
             TotalBytesSent = totalBytesSent;
-            TransmissionState = transmissionState;
+            TransactionState = transactionState;
         }
 
         /// <summary>
@@ -37,18 +37,18 @@ namespace NetFtp.NetFtpEventArgs
         /// <param name="totalBytesSent">
         ///     The total number of bytes sent during the transaction.
         /// </param>
-        /// <param name="transmissionState">
+        /// <param name="transactionState">
         ///     The state of the transaction.
         /// </param>
         /// <param name="webException">
         ///     The WebException that happened during the transaction.
         /// </param>
         public FtpUploadFileCompletedEventArgs(long totalBytesSent,
-            TransmissionState transmissionState,
+            TransactionState transactionState,
             WebException webException)
         {
             TotalBytesSent = totalBytesSent;
-            TransmissionState = transmissionState;
+            TransactionState = transactionState;
             WebException = webException;
         }
 
@@ -60,7 +60,7 @@ namespace NetFtp.NetFtpEventArgs
         /// <summary>
         ///     Gets the state of the transaction.
         /// </summary>
-        public TransmissionState TransmissionState { get; private set; }
+        public TransactionState TransactionState { get; private set; }
 
         /// <summary>
         ///     Gets the exception that happened during the transaction,

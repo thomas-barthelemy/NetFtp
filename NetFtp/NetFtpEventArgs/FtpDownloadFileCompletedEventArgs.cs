@@ -16,14 +16,14 @@ namespace NetFtp.NetFtpEventArgs
         /// <param name="totalBytesReceived">
         ///     The total number of bytes received during the transfer.
         /// </param>
-        /// <param name="transmissionState">
+        /// <param name="transactionState">
         ///     The state of the transfer.
         /// </param>
         public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
-            TransmissionState transmissionState)
+            TransactionState transactionState)
         {
             TotalBytesReceived = totalBytesReceived;
-            TransmissionState = transmissionState;
+            TransactionState = transactionState;
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace NetFtp.NetFtpEventArgs
         /// <param name="totalBytesReceived">
         ///     The total number of bytes received during the transfer.
         /// </param>
-        /// <param name="transmissionState">
+        /// <param name="transactionState">
         ///     The state of the transfer.
         /// </param>
         /// <param name="webException">
@@ -42,11 +42,11 @@ namespace NetFtp.NetFtpEventArgs
         ///     happened).
         /// </param>
         public FtpDownloadFileCompletedEventArgs(long totalBytesReceived,
-            TransmissionState transmissionState,
+            TransactionState transactionState,
             WebException webException)
         {
             TotalBytesReceived = totalBytesReceived;
-            TransmissionState = transmissionState;
+            TransactionState = transactionState;
             WebException = webException;
         }
 
@@ -58,7 +58,7 @@ namespace NetFtp.NetFtpEventArgs
         /// <summary>
         ///     Gets the status of the transmission.
         /// </summary>
-        public TransmissionState TransmissionState { get; private set; }
+        public TransactionState TransactionState { get; private set; }
 
         /// <summary>
         ///     Gets the WebException if an error happened during the transfer,

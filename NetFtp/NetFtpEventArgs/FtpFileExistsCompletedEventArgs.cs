@@ -47,13 +47,13 @@ namespace NetFtp.NetFtpEventArgs
         public WebException WebException { get; private set; }
         public long RemotefileSize { get; private set; }
 
-        public TransmissionState State
+        public TransactionState State
         {
             get
             {
                 return WebException == null
-                    ? TransmissionState.Success
-                    : TransmissionState.Failed;
+                    ? TransactionState.Success
+                    : TransactionState.Failed;
             }
         }
     }
