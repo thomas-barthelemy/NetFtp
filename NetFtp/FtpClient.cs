@@ -440,7 +440,9 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">The path to the local file to upload</param>
         /// <param name="remotePath">The path to the remote destination file</param>
-        /// <returns><see cref="FtpUploadFileCompletedEventArgs"/></returns>
+        /// <returns>
+        ///     <see cref="FtpUploadFileCompletedEventArgs" />
+        /// </returns>
         public FtpUploadFileCompletedEventArgs UploadResume(string localPath,
             string remotePath)
         {
@@ -547,195 +549,223 @@ namespace NetFtp
 
         #endregion
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //[MethodImpl(MethodImplOptions.Synchronized)]
-        //public void Download(string localDirectory, string localFilename,
-        //    string remoteDirectory, string remoteFileName)
-        //{
-        //    _abort = false;
-        //    var path = Path.Combine(localDirectory, localFilename);
-        //    var num = 0L;
-        //    try
-        //    {
-        //        var ftpWebRequest =
-        //            (FtpWebRequest)
-        //                WebRequest.Create(
-        //                    new Uri("ftp://" + _host + ":" + Port + "/" + remoteDirectory +
-        //                            "/" + remoteFileName));
-        //        ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-        //        ftpWebRequest.UsePassive = UsePassive;
-        //        ftpWebRequest.Timeout = TimeOut;
-        //        ftpWebRequest.Proxy = null;
-        //        ftpWebRequest.KeepAlive = KeepAlive;
-        //        ftpWebRequest.Method = WebRequestMethods.Ftp.DownloadFile;
-        //        var fileSize = FileExists(remoteDirectory, remoteFileName).RemotefileSize;
-        //        var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
-        //        using (
-        //            var responseStream = ftpWebRequest.GetResponse().GetResponseStream())
-        //        {
-        //            if (responseStream == null)
-        //                throw new WebException("Response stream was not received properly");
-        //            var buffer = new byte[128000];
-        //            var count = responseStream.Read(buffer, 0, 128000);
-        //            num = count;
-        //            while (count != 0 && !_abort)
-        //            {
-        //                fileStream.Write(buffer, 0, count);
-        //                count = responseStream.Read(buffer, 0, 128000);
-        //                num += count;
-        //                if (DownloadProgressChanged != null && !_abort)
-        //                    DownloadProgressChanged(this,
-        //                        new FtpDownloadProgressChangedEventArgs(num, fileSize));
-        //            }
-        //            fileStream.Close();
-        //        }
-        //        if (DownloadFileCompleted == null || _abort)
-        //            return;
-        //        DownloadFileCompleted(this,
-        //            new FtpDownloadFileCompletedEventArgs(num, TransactionState.Success));
-        //    }
-        //    catch (WebException ex)
-        //    {
-        //        if (DownloadFileCompleted != null && !_abort)
-        //            DownloadFileCompleted(this,
-        //                new FtpDownloadFileCompletedEventArgs(num,
-        //                    TransactionState.Failed, ex));
-        //    }
-        //}
+        #region RETR Function
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //public void DownloadAsync(string localDirectory, string localFilename,
-        //    string remoteDirectory,
-        //    string remoteFileName)
-        //{
-        //    var threadParameters = new FtpThreadTransferParameters(localDirectory,
-        //        localFilename, remoteDirectory, remoteFileName);
-        //    _thread = new Thread(DoDownloadAsync)
-        //    {
-        //        Name = "DownloadThread",
-        //        IsBackground = true,
-        //        Priority = ThreadPriority.Normal
-        //    };
-        //    _thread.Start(threadParameters);
-        //}
+        /// <summary>
+        ///     Downloads a file from the remote ftp path
+        ///     to the specified local path.
+        /// </summary>
+        /// <param name="localPath">Path where the FTP file will be saved</param>
+        /// <param name="remotePath">Path of the remote FTP file to download</param>
+        /// <returns>
+        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
+        /// </returns>
+        public FtpDownloadFileCompletedEventArgs Download(string localPath,
+            string remotePath)
+        {
+            _abort = false;
+            var bytesReceived = 0L;
+            try
+            {
+                var ftpWebRequest = CreateDefaultFtpRequest(
+                    WebRequestMethods.Ftp.DownloadFile,
+                    remotePath);
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //[MethodImpl(MethodImplOptions.Synchronized)]
-        //public void DownloadResume(string localDirectory, string localFilename,
-        //    string remoteDirectory,
-        //    string remoteFileName)
-        //{
-        //    _abort = false;
-        //    var str = Path.Combine(localDirectory, localFilename);
-        //    var fileInfo = new FileInfo(str);
-        //    FileStream fileStream = null;
-        //    var num1 = 0L;
-        //    var num2 = 0L;
-        //    try
-        //    {
-        //        var ftpWebRequest =
-        //            (FtpWebRequest)
-        //                WebRequest.Create(
-        //                    new Uri("ftp://" + _host + ":" + Port + "/" + remoteDirectory +
-        //                            "/" + remoteFileName));
-        //        ftpWebRequest.Credentials = new NetworkCredential(UserName, Password);
-        //        ftpWebRequest.UsePassive = UsePassive;
-        //        ftpWebRequest.Timeout = TimeOut;
-        //        ftpWebRequest.Proxy = null;
-        //        ftpWebRequest.KeepAlive = KeepAlive;
-        //        ftpWebRequest.Method = WebRequestMethods.Ftp.DownloadFile;
-        //        var fileSize = FileExists(remoteDirectory, remoteFileName).RemotefileSize;
-        //        if (fileInfo.Exists)
-        //        {
-        //            if (fileInfo.Length == fileSize)
-        //            {
-        //                if (DownloadFileCompleted != null)
-        //                {
-        //                    DownloadFileCompleted(this,
-        //                        new FtpDownloadFileCompletedEventArgs(0L,
-        //                            TransactionState.Success));
-        //                    return;
-        //                }
-        //            }
-        //            else if (fileInfo.Length > fileSize)
-        //            {
-        //                if (DownloadFileCompleted != null)
-        //                {
-        //                    DownloadFileCompleted(this,
-        //                        new FtpDownloadFileCompletedEventArgs(0L,
-        //                            TransactionState.LocalFileBiggerThanRemoteFile));
-        //                    return;
-        //                }
-        //            }
-        //            else
-        //            {
-        //                fileStream = new FileStream(str, FileMode.Append, FileAccess.Write);
-        //                ftpWebRequest.ContentOffset = fileInfo.Length;
-        //                num2 = fileInfo.Length;
-        //            }
-        //        }
-        //        else
-        //            fileStream = new FileStream(str, FileMode.Create, FileAccess.Write);
-        //        using (
-        //            var responseStream = ftpWebRequest.GetResponse().GetResponseStream())
-        //        {
-        //            if (responseStream == null)
-        //                throw new WebException("Response stream was not received properly");
-        //            if (fileStream == null)
-        //                throw new IOException(
-        //                    "Local file stream was not received properly");
-        //            var buffer = new byte[128000];
-        //            var count = responseStream.Read(buffer, 0, 128000);
-        //            num1 = num2 + count;
-        //            while (count != 0 && !_abort)
-        //            {
-        //                fileStream.Write(buffer, 0, count);
-        //                count = responseStream.Read(buffer, 0, 128000);
-        //                num1 += count;
-        //                if (DownloadProgressChanged != null && !_abort)
-        //                    DownloadProgressChanged(this,
-        //                        new FtpDownloadProgressChangedEventArgs(num1, fileSize));
-        //            }
-        //            fileStream.Close();
-        //        }
-        //        if (DownloadFileCompleted != null && !_abort)
-        //            DownloadFileCompleted(this,
-        //                new FtpDownloadFileCompletedEventArgs(num1,
-        //                    TransactionState.Success));
-        //    }
-        //    catch (WebException ex)
-        //    {
-        //        if (DownloadFileCompleted != null && !_abort)
-        //            DownloadFileCompleted(this,
-        //                new FtpDownloadFileCompletedEventArgs(num1,
-        //                    TransactionState.Failed, ex));
-        //    }
-        //}
+                var fileExistResult = FileExists(remotePath);
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //[MethodImpl(MethodImplOptions.Synchronized)]
-        //public void DownloadResumeAsync(string localDirectory, string localFilename,
-        //    string remoteDirectory,
-        //    string remoteFileName)
-        //{
-        //    var threadParameters = new FtpThreadTransferParameters(localDirectory,
-        //        localFilename, remoteDirectory, remoteFileName);
-        //    _thread = new Thread(DoDownloadResumeAsync)
-        //    {
-        //        Name = "DownloadThread",
-        //        IsBackground = true,
-        //        Priority = ThreadPriority.Normal
-        //    };
-        //    _thread.Start(threadParameters);
-        //}
+                if (!fileExistResult.FileExists)
+                {
+                    throw new FileNotFoundException("FTP remote file does not exist",
+                        remotePath);
+                }
+                var fileSize = fileExistResult.RemotefileSize;
+                var fileStream = new FileStream(localPath, FileMode.Create,
+                    FileAccess.Write);
+                using (
+                    var responseStream = ftpWebRequest.GetResponse().GetResponseStream())
+                {
+                    if (responseStream == null)
+                        throw new WebException("Response stream was not received properly");
+                    var buffer = new byte[128000];
+                    var count = responseStream.Read(buffer, 0, 128000);
+                    bytesReceived = count;
+                    while (count != 0)
+                    {
+                        fileStream.Write(buffer, 0, count);
+                        count = responseStream.Read(buffer, 0, 128000);
+                        bytesReceived += count;
+                        OnDownloadProgressChanged(
+                            new FtpDownloadProgressChangedEventArgs(bytesReceived,
+                                fileSize));
+
+                        if (!_abort) continue;
+
+                        var args = new FtpDownloadFileCompletedEventArgs(
+                            bytesReceived,
+                            TransactionState.Success);
+                        OnDownloadFileCompleted(args);
+                        return args;
+                    }
+                    fileStream.Close();
+                }
+                var result = new FtpDownloadFileCompletedEventArgs(bytesReceived,
+                    TransactionState.Success);
+                OnDownloadFileCompleted(result);
+                return result;
+            }
+            catch (WebException ex)
+            {
+                var args = new FtpDownloadFileCompletedEventArgs(bytesReceived,
+                    TransactionState.Failed, ex);
+                OnDownloadFileCompleted(args);
+                return args;
+            }
+        }
+
+        /// <summary>
+        ///     Downloads asynchronously a file from the remote ftp path
+        ///     to the specified local path.
+        /// </summary>
+        /// <param name="localPath">Path where the FTP file will be saved</param>
+        /// <param name="remotePath">Path of the remote FTP file to download</param>
+        /// <returns>
+        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
+        /// </returns>
+        public void DownloadAsync(string localPath, string remotePath)
+        {
+            _thread = new Thread(() => Download(localPath, remotePath))
+            {
+                Name = ThreadNames.DownloadThreadName,
+                IsBackground = true,
+                Priority = ThreadPriority.Normal
+            };
+            _thread.Start();
+        }
+
+        /// <summary>
+        ///     Resumes the download of a file from the remote ftp path
+        ///     to the specified local path.
+        ///     If the local file does not exists a regular download is performed.
+        /// </summary>
+        /// <param name="localPath">Path where the FTP file will be saved</param>
+        /// <param name="remotePath">Path of the remote FTP file to download</param>
+        /// <returns>
+        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
+        /// </returns>
+        public FtpDownloadFileCompletedEventArgs DownloadResume(string localPath,
+            string remotePath)
+        {
+            _abort = false;
+            var fileInfo = new FileInfo(localPath);
+
+            // If no local file exists, perform regular download
+            if (!fileInfo.Exists)
+                return Download(localPath, remotePath);
+
+            var totalBytes = 0L;
+
+            try
+            {
+                var ftpWebRequest = CreateDefaultFtpRequest(
+                    WebRequestMethods.Ftp.DownloadFile,
+                    remotePath);
+                ftpWebRequest.ContentOffset = fileInfo.Length;
+
+                var fileExistsResult = FileExists(remotePath);
+
+                // If the specified file does not exists, throw FileNotFound
+                if (!fileExistsResult.FileExists)
+                    throw new FileNotFoundException("FTP remote file does not exist",
+                        remotePath);
+
+                var fileSize = fileExistsResult.RemotefileSize;
+
+                if (fileInfo.Length == fileSize)
+                {
+                    var args = new FtpDownloadFileCompletedEventArgs(0L,
+                        TransactionState.Success);
+                    OnDownloadFileCompleted(args);
+                    return args;
+                }
+
+                if (fileInfo.Length > fileSize)
+                {
+                    // TODO: Change to throw exception
+                    var args = new FtpDownloadFileCompletedEventArgs(0L,
+                        TransactionState.LocalFileBiggerThanRemoteFile);
+                    OnDownloadFileCompleted(args);
+                    return args;
+                }
+
+                using (
+                    var fileStream = new FileStream(localPath, FileMode.Append,
+                        FileAccess.Write))
+                {
+                    using (
+                        var responseStream =
+                            ftpWebRequest.GetResponse().GetResponseStream())
+                    {
+                        if (responseStream == null)
+                            throw new WebException(
+                                "Response stream was not received properly");
+
+                        var buffer = new byte[128000];
+                        var count = responseStream.Read(buffer, 0, 128000);
+                        totalBytes = fileInfo.Length + count;
+                        while (count != 0)
+                        {
+                            fileStream.Write(buffer, 0, count);
+                            count = responseStream.Read(buffer, 0, 128000);
+                            totalBytes += count;
+
+                            OnDownloadProgressChanged(
+                                new FtpDownloadProgressChangedEventArgs(totalBytes,
+                                    fileSize));
+
+                            if (!_abort) continue;
+
+                            var args = new FtpDownloadFileCompletedEventArgs(
+                                totalBytes,
+                                TransactionState.Aborted);
+                            OnDownloadFileCompleted(args);
+                            return args;
+                        }
+                    }
+                }
+                var result = new FtpDownloadFileCompletedEventArgs(totalBytes,
+                    TransactionState.Success);
+                OnDownloadFileCompleted(result);
+                return result;
+            }
+            catch (WebException ex)
+            {
+                var args = new FtpDownloadFileCompletedEventArgs(totalBytes,
+                    TransactionState.Failed, ex);
+                OnDownloadFileCompleted(args);
+                return args;
+            }
+        }
+
+        /// <summary>
+        ///     Resumes asynchronously the download of a file from the remote ftp path
+        ///     to the specified local path.
+        ///     If the local file does not exists a regular download is performed.
+        /// </summary>
+        /// <param name="localPath">Path where the FTP file will be saved</param>
+        /// <param name="remotePath">Path of the remote FTP file to download</param>
+        /// <returns>
+        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
+        /// </returns>
+        public void DownloadResumeAsync(string localPath, string remotePath)
+        {
+            _thread = new Thread(() => DownloadResume(localPath, remotePath))
+            {
+                Name = ThreadNames.DownloadThreadName,
+                IsBackground = true,
+                Priority = ThreadPriority.Normal
+            };
+            _thread.Start();
+        }
 
         //[Obsolete(
         //    "Legacy function, will be refactored in next version. Method Signature won't change"
@@ -746,26 +776,7 @@ namespace NetFtp
         //    _thread.Abort();
         //}
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //private void DoDownloadAsync(object threadParameters)
-        //{
-        //    var param = (FtpThreadTransferParameters) threadParameters;
-        //    Download(param.LocalDirectory, param.LocalFilename,
-        //        param.RemoteDirectory, param.RemoteFilename);
-        //}
-
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //private void DoDownloadResumeAsync(object threadParameters)
-        //{
-        //    var param = (FtpThreadTransferParameters) threadParameters;
-        //    DownloadResume(param.LocalDirectory,
-        //        param.LocalFilename,
-        //        param.RemoteDirectory, param.RemoteFilename);
-        //}
+        #endregion
 
         #endregion
     }
