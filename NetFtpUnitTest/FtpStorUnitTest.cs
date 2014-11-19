@@ -74,5 +74,46 @@ namespace NetFtpUnitTest
 
             Assert.IsInstanceOfType(ex, typeof(FileNotFoundException));
         }
+
+        [TestMethod]
+        public void UploadResume_ValidParameters_FileUploaded()
+        {
+            var client = FtpClientUnitTest.GetDefaultFtpClient();
+
+            var localFile = new FileInfo(Utils.LocalPath);
+
+            var result = client.UploadResume(Utils.LocalPath, Utils.RemotePath);
+
+            var fileExistsResult = client.FileExists(Utils.RemotePath);
+            Assert.IsTrue(fileExistsResult.FileExists);
+            Assert.AreEqual(localFile.Length, fileExistsResult.RemotefileSize);
+            Assert.AreEqual(localFile.Length, result.TotalBytesSent); 
+        }
+
+        [TestMethod]
+        public void UploadResumeAsync_ValidParameters_FileUploaded()
+        {
+            var client = FtpClientUnitTest.GetDefaultFtpClient();
+            var waitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+            var localFile = new FileInfo(Utils.LocalPath);
+
+            FtpUploadFileCompletedEventArgs result = null;
+
+            client.UploadFileCompleted += (sender, args) =>
+            {
+                result = args;
+                Assert.IsNull(args.WebException);
+                waitHandle.Set();
+            };
+
+            client.UploadResumeAsync(Utils.LocalPath, Utils.RemotePath);
+
+            waitHandle.WaitOne(TimeSpan.FromSeconds(15));
+
+            var fileExistsResult = client.FileExists(Utils.RemotePath);
+            Assert.IsTrue(fileExistsResult.FileExists);
+            Assert.AreEqual(localFile.Length, fileExistsResult.RemotefileSize);
+            Assert.AreEqual(localFile.Length, result.TotalBytesSent);
+        }
     }
 }

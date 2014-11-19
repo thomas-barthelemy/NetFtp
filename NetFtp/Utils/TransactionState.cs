@@ -19,6 +19,11 @@
         /// </summary>
         LocalFileBiggerThanRemoteFile,
         /// <summary>
+        ///     The upload resume failed as the remote file is bigger than
+        ///     the file to upload.
+        /// </summary>
+        RemoteFileBiggerThanLocalFile,
+        /// <summary>
         ///     The FTP Client is checking if the specified remote directory exists.
         /// </summary>
         ProofingDirExits,
