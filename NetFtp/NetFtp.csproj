@@ -50,7 +50,7 @@
     <Compile Include="Utils\FtpFile.cs" />
     <Compile Include="Utils\FtpListUtil.cs" />
     <Compile Include="Utils\MathUtil.cs" />
-    <Compile Include="Utils\TransmissionState.cs" />
+    <Compile Include="Utils\TransactionState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />
