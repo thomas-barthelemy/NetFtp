@@ -9,12 +9,13 @@ namespace NetFtpUnitTest
     public class ThreadPoolUnitTest
     {
         private readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        private readonly ThreadPool _threadPool = new ThreadPool();
 
         [TestMethod]
         public void StartNewThread_ValidParams_Success()
         {
             var worked = false;
-            var uid = ThreadPool.StartNewthread(string.Empty,
+            var uid = _threadPool.StartNewthread(string.Empty,
                 () =>
                 {
                     worked = true;
@@ -24,18 +25,17 @@ namespace NetFtpUnitTest
             Assert.IsNotNull(uid);
             _resetEvent.WaitOne(TimeSpan.FromSeconds(5));
             Assert.IsTrue(worked);
-            Assert.IsTrue(ThreadPool.GetThreads().Count == 0);
+            Assert.IsTrue(_threadPool.GetThreads().Count == 0);
         }
 
         [TestMethod]
         public void AbortThread_ValidParams_Aborted()
         {
             var isAborted = false;
-            var uid = ThreadPool.StartNewthread(string.Empty,
+            var thread = _threadPool.StartNewthread(string.Empty,
                 () => FakeThread(ref isAborted));
-            var thread = ThreadPool.GetThread(uid);
+            _threadPool.AbortThread(thread);
             Assert.IsNotNull(thread);
-            ThreadPool.AbortThread(uid);
             Assert.IsTrue(isAborted);
         }
 
@@ -46,31 +46,31 @@ namespace NetFtpUnitTest
             var thread2Aborted = false;
             var thread3Aborted = false;
 
-            ThreadPool.StartNewthread(string.Empty,
+            _threadPool.StartNewthread(string.Empty,
                 () => FakeThread(ref thread1Aborted));
-            ThreadPool.StartNewthread(string.Empty,
+            _threadPool.StartNewthread(string.Empty,
                 () => FakeThread(ref thread2Aborted));
-            ThreadPool.StartNewthread(string.Empty,
+            _threadPool.StartNewthread(string.Empty,
                 () => FakeThread(ref thread3Aborted));
 
-            ThreadPool.AbortAll();
+            _threadPool.AbortAllThreads();
             Assert.IsTrue(thread1Aborted);
             Assert.IsTrue(thread2Aborted);
             Assert.IsTrue(thread3Aborted);
-            Assert.IsTrue(ThreadPool.GetThreads().Count == 0);
+            Assert.IsTrue(_threadPool.GetThreads().Count == 0);
         }
 
         [TestMethod]
         public void AbortThread_Concurrent_Aborted()
         {
             var aborted = false;
-            var id = ThreadPool.StartNewthread(string.Empty,
+            var id = _threadPool.StartNewthread(string.Empty,
                 () => FakeThread(ref aborted));
             
             for (var i = 0; i < 10; i++)
             {
-                ThreadPool.StartNewthread(string.Empty, () =>
-                    ThreadPool.AbortThread(id));
+                _threadPool.StartNewthread(string.Empty, () =>
+                    _threadPool.AbortThread(id));
             }
 
             Assert.IsTrue(aborted);

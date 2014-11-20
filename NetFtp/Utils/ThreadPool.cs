@@ -4,22 +4,22 @@ using System.Threading;
 
 namespace NetFtp.Utils
 {
-    public class ThreadPool
+    internal class ThreadPool
     {
-        private static readonly IDictionary<Guid, Thread> Threads
+        private readonly IDictionary<Guid, Thread> _threads
             = new Dictionary<Guid, Thread>();
 
-        internal static Thread GetThread(Guid uid)
+        internal Thread GetThread(Guid uid)
         {
-            return Threads.ContainsKey(uid) ? Threads[uid] : null;
+            return _threads.ContainsKey(uid) ? _threads[uid] : null;
         }
 
-        internal static ICollection<Thread> GetThreads()
+        internal ICollection<Thread> GetThreads()
         {
-            return Threads.Values;
+            return _threads.Values;
         }
 
-        internal static Thread StartNewthread(string threadName, ThreadStart threadStart)
+        internal Thread StartNewthread(string threadName, ThreadStart threadStart)
         {
             var uid = Guid.NewGuid();
 
@@ -34,30 +34,50 @@ namespace NetFtp.Utils
                 Priority = ThreadPriority.Normal
             };
 
-            Threads.Add(uid, thread);
+            _threads.Add(uid, thread);
             thread.Start();
 
             return thread;
         }
 
-        internal static void AbortThread(Guid uid)
+        internal void AbortThread(Thread thread)
         {
-            if (!Threads.ContainsKey(uid)) return;
+            if (thread == null) return;
 
-            var thread = Threads[uid];
+            thread.Abort();
+
+            Guid? toDelete = null;
+            foreach (var item in _threads)
+            {
+                if (item.Value != thread)
+                    continue;
+                
+                toDelete = item.Key;
+                break;
+            }
+
+            if (toDelete.HasValue)
+                _threads.Remove(toDelete.Value);
+        }
+
+        internal void AbortThread(Guid uid)
+        {
+            if (!_threads.ContainsKey(uid)) return;
+
+            var thread = _threads[uid];
             if (thread == null || !thread.IsAlive)
             {
-                Threads.Remove(uid);
+                _threads.Remove(uid);
                 return;
             }
 
             thread.Abort();
-            Threads.Remove(uid);
+            _threads.Remove(uid);
         }
 
-        internal static void AbortAll()
+        internal void AbortAllThreads()
         {
-            var keysToAbort = new List<Guid>(Threads.Keys);
+            var keysToAbort = new List<Guid>(_threads.Keys);
 
             foreach (var keyToAbort in keysToAbort)
             {
@@ -65,10 +85,10 @@ namespace NetFtp.Utils
             }
         }
 
-        private static void ClearThread(Guid uid)
+        private void ClearThread(Guid uid)
         {
-            if (Threads.ContainsKey(uid))
-                Threads.Remove(uid);
+            if (_threads.ContainsKey(uid))
+                _threads.Remove(uid);
         }
     }
 }
