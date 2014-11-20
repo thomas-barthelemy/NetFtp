@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Threading;
 using NetFtp.NetFtpEventArgs;
 using NetFtp.Utils;
 using ThreadPool = NetFtp.Utils.ThreadPool;
@@ -13,31 +14,16 @@ namespace NetFtp
     {
         #region Fields
 
-        private bool _abort;
         private string _host;
+        private readonly ThreadPool _threadPool;
 
         #endregion
 
         #region Constructors
 
-        public FtpClient()
-        {
-            UsePassive = true;
-            TimeOut = 30000;
-            ReadWriteTimeOut = 30000;
-            KeepAlive = false;
-        }
-
         public FtpClient(string host, string userName, string password, int port)
+            : this(host, userName, password, port, true)
         {
-            Host = host;
-            UserName = userName;
-            Password = password;
-            Port = port;
-            UsePassive = true;
-            TimeOut = 30000;
-            ReadWriteTimeOut = 30000;
-            KeepAlive = false;
         }
 
         public FtpClient(string host, string userName, string password, int port,
@@ -51,6 +37,8 @@ namespace NetFtp
             TimeOut = 30000;
             ReadWriteTimeOut = 30000;
             KeepAlive = false;
+
+            _threadPool = new ThreadPool();
         }
 
         #endregion
@@ -264,9 +252,10 @@ namespace NetFtp
         ///     Lists asynchronously the files and directorties on the specified path.
         /// </summary>
         /// <param name="remoteDirectory">The path to the directory to list</param>
-        public void ListSegmentsAsync(string remoteDirectory)
+        /// <returns>The thread executing the asynchronous transaction</returns>
+        public Thread ListSegmentsAsync(string remoteDirectory)
         {
-            ThreadPool.StartNewthread(ThreadNames.ListThreadName,
+            return _threadPool.StartNewthread(ThreadNames.ListThreadName,
                 () => ListSegments(remoteDirectory));
         }
 
@@ -297,10 +286,7 @@ namespace NetFtp
                         )
                     {
                         var str = streamReader.ReadToEnd();
-                        var ftpFile = FtpListUtils.Parse(str.Split(new[]
-                        {
-                            '\n'
-                        })[0]);
+                        var ftpFile = FtpListUtils.Parse(str.Split(new[] {'\n'})[0]);
                         remFileSize = ftpFile.Size;
                     }
                 }
@@ -320,7 +306,7 @@ namespace NetFtp
         /// <returns>Whether the directory exists</returns>
         public bool DirectoryExits(string remoteDirectory)
         {
-            if (UploadProgressChanged != null && !_abort)
+            if (UploadProgressChanged != null)
                 UploadProgressChanged(this,
                     new FtpUploadProgressChangedEventArgs(
                         TransactionState.ProofingDirExits));
@@ -347,7 +333,6 @@ namespace NetFtp
         public FtpUploadFileCompletedEventArgs Upload(string localPath,
             string remotePath)
         {
-            _abort = false;
             var fileInfo = new FileInfo(localPath);
 
             if (!fileInfo.Exists)
@@ -386,22 +371,25 @@ namespace NetFtp
                         do
                         {
                             bytesSent = fileStream.Read(buffer, 0, 128000);
+                            totalBytesSent += bytesSent;
                             requestStream.Write(buffer, 0, bytesSent);
-
-                            if (_abort)
-                                return new FtpUploadFileCompletedEventArgs(
-                                    totalBytesSent, TransactionState.Aborted);
 
                             OnUploadProgressChanged(new FtpUploadProgressChangedEventArgs(
                                 fileStream.Position, fileStream.Length));
                         } while (bytesSent != 0);
-                        totalBytesSent = fileStream.Length;
                     }
                 }
                 var result = new FtpUploadFileCompletedEventArgs(totalBytesSent,
                     TransactionState.Success);
                 OnUploadFileCompleted(result);
                 return result;
+            }
+            catch (ThreadAbortException)
+            {
+                var args = new FtpUploadFileCompletedEventArgs(
+                    totalBytesSent, TransactionState.Aborted);
+                OnUploadFileCompleted(args);
+                return args;
             }
             catch (WebException ex)
             {
@@ -418,10 +406,11 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">The path to the local file to upload</param>
         /// <param name="remotePath">The remote destination path</param>
-        public void UploadAsync(string localPath,
+        /// <returns>The thread executing the asynchronous transaction</returns>
+        public Thread UploadAsync(string localPath,
             string remotePath)
         {
-            ThreadPool.StartNewthread(ThreadNames.UploadThreadName,
+            return _threadPool.StartNewthread(ThreadNames.UploadThreadName,
                 () => Upload(localPath, remotePath));
         }
 
@@ -437,7 +426,6 @@ namespace NetFtp
         public FtpUploadFileCompletedEventArgs UploadResume(string localPath,
             string remotePath)
         {
-            _abort = false;
             var fileInfo = new FileInfo(localPath);
             var totalBytesSent = 0L;
             var ftpWebRequest = CreateDefaultFtpRequest(WebRequestMethods.Ftp.UploadFile,
@@ -488,18 +476,11 @@ namespace NetFtp
                             count = streamReader.BaseStream.Read(buffer, 0, 128000);
                             requestStream.Write(buffer, 0, count);
 
+                            totalBytesSent += count;
                             OnUploadProgressChanged(
                                 new FtpUploadProgressChangedEventArgs(
-                                    streamReader.BaseStream.Position,
-                                    streamReader.BaseStream.Length));
-
-                            if (!_abort) continue;
-                            // Abortind
-                            var args = new FtpUploadFileCompletedEventArgs(
-                                streamReader.BaseStream.Position,
-                                TransactionState.Aborted);
-                            OnUploadFileCompleted(args);
-                            return args;
+                                    totalBytesSent,
+                                    fileInfo.Length));
                         } while (count != 0);
 
                         totalBytesSent = streamReader.BaseStream.Length;
@@ -509,6 +490,15 @@ namespace NetFtp
                     TransactionState.Success);
                 OnUploadFileCompleted(result);
                 return result;
+            }
+            catch (ThreadAbortException)
+            {
+                // Abortind
+                var args = new FtpUploadFileCompletedEventArgs(
+                    totalBytesSent,
+                    TransactionState.Aborted);
+                OnUploadFileCompleted(args);
+                return args;
             }
             catch (WebException ex)
             {
@@ -525,9 +515,10 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">The path to the local file to upload</param>
         /// <param name="remotePath">The path to the remote destination file</param>
-        public void UploadResumeAsync(string localPath, string remotePath)
+        /// <returns>The thread executing the asynchronous transaction</returns>
+        public Thread UploadResumeAsync(string localPath, string remotePath)
         {
-            ThreadPool.StartNewthread(ThreadNames.UploadThreadName,
+            return _threadPool.StartNewthread(ThreadNames.UploadThreadName,
                 () => UploadResume(localPath, remotePath));
         }
 
@@ -547,7 +538,6 @@ namespace NetFtp
         public FtpDownloadFileCompletedEventArgs Download(string localPath,
             string remotePath)
         {
-            _abort = false;
             var bytesReceived = 0L;
             try
             {
@@ -563,39 +553,43 @@ namespace NetFtp
                         remotePath);
                 }
                 var fileSize = fileExistResult.RemotefileSize;
-                var fileStream = new FileStream(localPath, FileMode.Create,
-                    FileAccess.Write);
                 using (
-                    var responseStream = ftpWebRequest.GetResponse().GetResponseStream())
+                    var fileStream = new FileStream(localPath, FileMode.Create,
+                        FileAccess.Write))
                 {
-                    if (responseStream == null)
-                        throw new WebException("Response stream was not received properly");
-                    var buffer = new byte[128000];
-                    var count = responseStream.Read(buffer, 0, 128000);
-                    bytesReceived = count;
-                    while (count != 0)
+                    using (
+                        var responseStream =
+                            ftpWebRequest.GetResponse().GetResponseStream())
                     {
-                        fileStream.Write(buffer, 0, count);
-                        count = responseStream.Read(buffer, 0, 128000);
-                        bytesReceived += count;
-                        OnDownloadProgressChanged(
-                            new FtpDownloadProgressChangedEventArgs(bytesReceived,
-                                fileSize));
+                        if (responseStream == null)
+                            throw new WebException(
+                                "Response stream was not received properly");
+                        var buffer = new byte[128000];
+                        int count;
+                        do
+                        {
+                            count = responseStream.Read(buffer, 0, 128000);
+                            bytesReceived += count;
+                            fileStream.Write(buffer, 0, count);
 
-                        if (!_abort) continue;
-
-                        var args = new FtpDownloadFileCompletedEventArgs(
-                            bytesReceived,
-                            TransactionState.Success);
-                        OnDownloadFileCompleted(args);
-                        return args;
+                            OnDownloadProgressChanged(
+                                new FtpDownloadProgressChangedEventArgs(bytesReceived,
+                                    fileSize));
+                        } while (count != 0);
                     }
-                    fileStream.Close();
                 }
                 var result = new FtpDownloadFileCompletedEventArgs(bytesReceived,
                     TransactionState.Success);
                 OnDownloadFileCompleted(result);
                 return result;
+            }
+            catch (ThreadAbortException)
+            {
+                var args = new FtpDownloadFileCompletedEventArgs(
+                    bytesReceived,
+                    TransactionState.Success);
+                OnDownloadFileCompleted(args);
+                return args;
             }
             catch (WebException ex)
             {
@@ -612,12 +606,10 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">Path where the FTP file will be saved</param>
         /// <param name="remotePath">Path of the remote FTP file to download</param>
-        /// <returns>
-        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
-        /// </returns>
-        public void DownloadAsync(string localPath, string remotePath)
+        /// <returns>The thread executing the asynchronous transaction</returns>
+        public Thread DownloadAsync(string localPath, string remotePath)
         {
-            ThreadPool.StartNewthread(ThreadNames.DownloadThreadName,
+            return _threadPool.StartNewthread(ThreadNames.DownloadThreadName,
                 () => Download(localPath, remotePath));
         }
 
@@ -634,7 +626,6 @@ namespace NetFtp
         public FtpDownloadFileCompletedEventArgs DownloadResume(string localPath,
             string remotePath)
         {
-            _abort = false;
             var fileInfo = new FileInfo(localPath);
 
             // If no local file exists, perform regular download
@@ -689,32 +680,31 @@ namespace NetFtp
                                 "Response stream was not received properly");
 
                         var buffer = new byte[128000];
-                        var count = responseStream.Read(buffer, 0, 128000);
-                        totalBytes = fileInfo.Length + count;
-                        while (count != 0)
+                        int count;
+                        do
                         {
-                            fileStream.Write(buffer, 0, count);
                             count = responseStream.Read(buffer, 0, 128000);
-                            totalBytes += count;
+                            totalBytes = fileInfo.Length + count;
+                            fileStream.Write(buffer, 0, count);
 
                             OnDownloadProgressChanged(
                                 new FtpDownloadProgressChangedEventArgs(totalBytes,
                                     fileSize));
-
-                            if (!_abort) continue;
-
-                            var args = new FtpDownloadFileCompletedEventArgs(
-                                totalBytes,
-                                TransactionState.Aborted);
-                            OnDownloadFileCompleted(args);
-                            return args;
-                        }
+                        } while (count != 0);
                     }
                 }
                 var result = new FtpDownloadFileCompletedEventArgs(totalBytes,
                     TransactionState.Success);
                 OnDownloadFileCompleted(result);
                 return result;
+            }
+            catch (ThreadInterruptedException)
+            {
+                var args = new FtpDownloadFileCompletedEventArgs(
+                    totalBytes,
+                    TransactionState.Aborted);
+                OnDownloadFileCompleted(args);
+                return args;
             }
             catch (WebException ex)
             {
@@ -732,22 +722,33 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">Path where the FTP file will be saved</param>
         /// <param name="remotePath">Path of the remote FTP file to download</param>
-        public void DownloadResumeAsync(string localPath, string remotePath)
+        /// <returns>The thread executing the asynchronous transaction</returns>
+        public Thread DownloadResumeAsync(string localPath, string remotePath)
         {
-            ThreadPool.StartNewthread(ThreadNames.DownloadThreadName,
+            return _threadPool.StartNewthread(ThreadNames.DownloadThreadName,
                 () => DownloadResume(localPath, remotePath));
         }
 
-        //[Obsolete(
-        //    "Legacy function, will be refactored in next version. Method Signature won't change"
-        //    )]
-        //public void Abort()
-        //{
-        //    _abort = true;
-        //    _thread.Abort();
-        //}
-
         #endregion
+
+        /// <summary>
+        ///     Aborts all the Asynchronous transaction.
+        /// </summary>
+        public void AbortAllAsyncTransactions()
+        {
+            _threadPool.AbortAllThreads();
+        }
+
+        /// <summary>
+        ///     Aborts the specified asynchronous transaction.
+        /// </summary>
+        /// <param name="thread">
+        ///     The thread executing the asynchronous transaction
+        /// </param>
+        public void AbortAsyncTransaction(Thread thread)
+        {
+            _threadPool.AbortThread(thread);
+        }
 
         #endregion
     }
