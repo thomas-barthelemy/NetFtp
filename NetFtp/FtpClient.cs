@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Threading;
 using NetFtp.NetFtpEventArgs;
 using NetFtp.Utils;
+using ThreadPool = NetFtp.Utils.ThreadPool;
 
 namespace NetFtp
 {
@@ -15,7 +15,6 @@ namespace NetFtp
 
         private bool _abort;
         private string _host;
-        private Thread _thread; // TODO: Thread pool
 
         #endregion
 
@@ -267,13 +266,8 @@ namespace NetFtp
         /// <param name="remoteDirectory">The path to the directory to list</param>
         public void ListSegmentsAsync(string remoteDirectory)
         {
-            _thread = new Thread(() => ListSegments(remoteDirectory))
-            {
-                Name = ThreadNames.ListThreadName,
-                IsBackground = true,
-                Priority = ThreadPriority.Normal
-            };
-            _thread.Start();
+            ThreadPool.StartNewthread(ThreadNames.ListThreadName,
+                () => ListSegments(remoteDirectory));
         }
 
         /// <summary>
@@ -347,6 +341,9 @@ namespace NetFtp
         /// <returns>
         ///     <see cref="FtpUploadFileCompletedEventArgs" />
         /// </returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Throws when the specified remote file was not found.
+        /// </exception>
         public FtpUploadFileCompletedEventArgs Upload(string localPath,
             string remotePath)
         {
@@ -424,14 +421,8 @@ namespace NetFtp
         public void UploadAsync(string localPath,
             string remotePath)
         {
-            _thread =
-                new Thread(() => Upload(localPath, remotePath))
-                {
-                    Name = ThreadNames.UploadThreadName,
-                    IsBackground = true,
-                    Priority = ThreadPriority.Normal
-                };
-            _thread.Start();
+            ThreadPool.StartNewthread(ThreadNames.UploadThreadName,
+                () => Upload(localPath, remotePath));
         }
 
         /// <summary>
@@ -536,15 +527,8 @@ namespace NetFtp
         /// <param name="remotePath">The path to the remote destination file</param>
         public void UploadResumeAsync(string localPath, string remotePath)
         {
-            _thread =
-                new Thread(
-                    () => UploadResume(localPath, remotePath))
-                {
-                    Name = ThreadNames.UploadThreadName,
-                    IsBackground = true,
-                    Priority = ThreadPriority.Normal
-                };
-            _thread.Start();
+            ThreadPool.StartNewthread(ThreadNames.UploadThreadName,
+                () => UploadResume(localPath, remotePath));
         }
 
         #endregion
@@ -633,13 +617,8 @@ namespace NetFtp
         /// </returns>
         public void DownloadAsync(string localPath, string remotePath)
         {
-            _thread = new Thread(() => Download(localPath, remotePath))
-            {
-                Name = ThreadNames.DownloadThreadName,
-                IsBackground = true,
-                Priority = ThreadPriority.Normal
-            };
-            _thread.Start();
+            ThreadPool.StartNewthread(ThreadNames.DownloadThreadName,
+                () => Download(localPath, remotePath));
         }
 
         /// <summary>
@@ -753,18 +732,10 @@ namespace NetFtp
         /// </summary>
         /// <param name="localPath">Path where the FTP file will be saved</param>
         /// <param name="remotePath">Path of the remote FTP file to download</param>
-        /// <returns>
-        ///     <see cref="FtpDownloadFileCompletedEventArgs" />
-        /// </returns>
         public void DownloadResumeAsync(string localPath, string remotePath)
         {
-            _thread = new Thread(() => DownloadResume(localPath, remotePath))
-            {
-                Name = ThreadNames.DownloadThreadName,
-                IsBackground = true,
-                Priority = ThreadPriority.Normal
-            };
-            _thread.Start();
+            ThreadPool.StartNewthread(ThreadNames.DownloadThreadName,
+                () => DownloadResume(localPath, remotePath));
         }
 
         //[Obsolete(
