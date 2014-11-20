@@ -19,7 +19,7 @@ namespace NetFtp.Utils
             return Threads.Values;
         }
 
-        internal static Guid StartNewthread(string threadName, ThreadStart threadStart)
+        internal static Thread StartNewthread(string threadName, ThreadStart threadStart)
         {
             var uid = Guid.NewGuid();
 
@@ -37,7 +37,7 @@ namespace NetFtp.Utils
             Threads.Add(uid, thread);
             thread.Start();
 
-            return uid;
+            return thread;
         }
 
         internal static void AbortThread(Guid uid)
