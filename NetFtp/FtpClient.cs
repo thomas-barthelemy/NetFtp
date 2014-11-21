@@ -430,10 +430,23 @@ namespace NetFtp
         /// <returns>
         ///     <see cref="FtpUploadFileCompletedEventArgs" />
         /// </returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Throws when the specified local file could not be found.
+        /// </exception>
+        /// <exception cref="FileSizeMismatchException">
+        ///     Throws when the specified remote file is bigger than the file
+        ///     to upload.
+        /// </exception>
         public FtpUploadFileCompletedEventArgs UploadResume(string localPath,
             string remotePath)
         {
             var fileInfo = new FileInfo(localPath);
+
+            if(!fileInfo.Exists)
+                throw new FileNotFoundException(
+                    "Could not find the specified file to upload",
+                    localPath);
+
             var totalBytesSent = 0L;
             var ftpWebRequest = CreateDefaultFtpRequest(WebRequestMethods.Ftp.UploadFile,
                 remotePath);
@@ -451,11 +464,7 @@ namespace NetFtp
                 // Checks if remote is bigger than local file
                 if (fileInfo.Length < remFileSize)
                 {
-                    var args = new FtpUploadFileCompletedEventArgs(
-                        remFileSize,
-                        TransactionState.RemoteFileBiggerThanLocalFile);
-                    OnUploadFileCompleted(args);
-                    return args;
+                    throw new FileSizeMismatchException(remFileSize, fileInfo.Length);
                 }
 
                 // If the remote file exists we append to its content
@@ -512,6 +521,9 @@ namespace NetFtp
                 var args = new FtpUploadFileCompletedEventArgs(totalBytesSent,
                     TransactionState.Failed, ex);
                 OnUploadFileCompleted(args);
+
+                if (ex is FileSizeMismatchException)
+                    throw;
                 return args;
             }
         }
@@ -630,6 +642,13 @@ namespace NetFtp
         /// <returns>
         ///     <see cref="FtpDownloadFileCompletedEventArgs" />
         /// </returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Throws when the specified remote file could not be found.
+        /// </exception>
+        /// <exception cref="FileSizeMismatchException">
+        ///     Throws when the specified local file is bigger than the file
+        ///     to download.
+        /// </exception>
         public FtpDownloadFileCompletedEventArgs DownloadResume(string localPath,
             string remotePath)
         {
@@ -655,9 +674,9 @@ namespace NetFtp
                     throw new FileNotFoundException("FTP remote file does not exist",
                         remotePath);
 
-                var fileSize = fileExistsResult.RemotefileSize;
+                var remFileSize = fileExistsResult.RemotefileSize;
 
-                if (fileInfo.Length == fileSize)
+                if (fileInfo.Length == remFileSize)
                 {
                     var args = new FtpDownloadFileCompletedEventArgs(0L,
                         TransactionState.Success);
@@ -665,13 +684,9 @@ namespace NetFtp
                     return args;
                 }
 
-                if (fileInfo.Length > fileSize)
+                if (fileInfo.Length > remFileSize)
                 {
-                    // TODO: Change to throw exception
-                    var args = new FtpDownloadFileCompletedEventArgs(0L,
-                        TransactionState.LocalFileBiggerThanRemoteFile);
-                    OnDownloadFileCompleted(args);
-                    return args;
+                    throw new FileSizeMismatchException(remFileSize, fileInfo.Length);
                 }
 
                 using (
@@ -696,7 +711,7 @@ namespace NetFtp
 
                             OnDownloadProgressChanged(
                                 new FtpDownloadProgressChangedEventArgs(totalBytes,
-                                    fileSize));
+                                    remFileSize));
                         } while (count != 0);
                     }
                 }
@@ -705,7 +720,7 @@ namespace NetFtp
                 OnDownloadFileCompleted(result);
                 return result;
             }
-            catch (ThreadInterruptedException)
+            catch (ThreadAbortException)
             {
                 var args = new FtpDownloadFileCompletedEventArgs(
                     totalBytes,
@@ -718,6 +733,9 @@ namespace NetFtp
                 var args = new FtpDownloadFileCompletedEventArgs(totalBytes,
                     TransactionState.Failed, ex);
                 OnDownloadFileCompleted(args);
+
+                if (ex is FileSizeMismatchException)
+                    throw;
                 return args;
             }
         }

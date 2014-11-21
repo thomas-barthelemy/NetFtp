@@ -14,16 +14,6 @@
         /// </summary>
         Success,
         /// <summary>
-        ///     The download resume failed as the local file is bigger than
-        ///     the file to download.
-        /// </summary>
-        LocalFileBiggerThanRemoteFile,
-        /// <summary>
-        ///     The upload resume failed as the remote file is bigger than
-        ///     the file to upload.
-        /// </summary>
-        RemoteFileBiggerThanLocalFile,
-        /// <summary>
         ///     The FTP Client is checking if the specified remote directory exists.
         /// </summary>
         ProofingDirExits,
