@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace NetFtp
 {
@@ -12,8 +14,16 @@ namespace NetFtp
     ///     resume a download/upload and the specified local/remote file is already
     ///     bigger than the file to download/upload.
     /// </remarks>
+    [Serializable]
     public class FileSizeMismatchException : WebException
     {
+        public FileSizeMismatchException() { }
+        protected FileSizeMismatchException(SerializationInfo serializationInfo,
+            StreamingContext streamingContext)
+            : base(serializationInfo, streamingContext) { }
+        public FileSizeMismatchException(string message) : base(message) { }
+        public FileSizeMismatchException(string message, Exception exception)
+            : base(message, exception) { }
         public FileSizeMismatchException(long remoteFileSize, long localFileSize)
         {
             RemoteFileSize = remoteFileSize;
@@ -28,5 +38,12 @@ namespace NetFtp
         ///     Gets the size of the local file.
         /// </summary>
         public long LocalFileSize { get; private set; }
+
+        [SecurityPermission(SecurityAction.LinkDemand,
+            Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            base.GetObjectData(serializationInfo, streamingContext);
+        }
     }
 }

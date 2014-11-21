@@ -5,8 +5,7 @@ using ThreadPool = NetFtp.Utils.ThreadPool;
 
 namespace NetFtpUnitTest
 {
-    [TestClass]
-    public class ThreadPoolUnitTest
+    public class ThreadPoolUnitTest : IDisposable
     {
         private readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
         private readonly ThreadPool _threadPool = new ThreadPool();
@@ -87,6 +86,17 @@ namespace NetFtpUnitTest
             {
                 isAborted = true;
             }
+        }
+
+        protected virtual void Dispose(bool disposeManaged)
+        {
+            if(disposeManaged)
+                _resetEvent.Close();
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

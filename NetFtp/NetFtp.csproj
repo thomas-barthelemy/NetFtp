@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\FileSizeMismatchException.cs" />
     <Compile Include="FtpClient.cs" />
     <Compile Include="NetFtpEventArgs\FtpDownloadFileCompletedEventArgs.cs" />
     <Compile Include="NetFtpEventArgs\FtpDownloadProgressChangedEventArgs.cs" />
@@ -53,9 +54,7 @@
     <Compile Include="Utils\ThreadPool.cs" />
     <Compile Include="Utils\TransactionState.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Exceptions\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
