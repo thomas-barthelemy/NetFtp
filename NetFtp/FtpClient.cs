@@ -37,6 +37,7 @@ namespace NetFtp
             TimeOut = 30000;
             ReadWriteTimeOut = 30000;
             KeepAlive = false;
+            BufferSize = 128000;
 
             _threadPool = new ThreadPool();
         }
@@ -71,26 +72,33 @@ namespace NetFtp
 
         /// <summary>
         ///     Gets or Sets the FTP Passive mode feature.
+        ///     (Default: True)
         /// </summary>
         public bool UsePassive { get; set; }
 
         /// <summary>
         ///     Gets or Sets the timeout (in ms) for FTP connections
-        ///     (default: 30000 ms)
+        ///     (Default: 30000 ms)
         /// </summary>
         public int TimeOut { get; set; }
 
         /// <summary>
-        ///     Gets or Sets the IO timeout (in ms)
-        ///     (default: 30000 ms)
+        ///     Gets or Sets the IO timeout.
+        ///     (Default: 30000 ms)
         /// </summary>
         public int ReadWriteTimeOut { get; set; }
 
         /// <summary>
         ///     Gets or Sets the Keep-Alive feature.
+        ///     (Default: False)
         /// </summary>
         public bool KeepAlive { get; set; }
 
+        /// <summary>
+        ///     Size of the buffer used for transfers.
+        ///     (Default: 128000 bytes)
+        /// </summary>
+        public int BufferSize { get; set; }
         #endregion
 
         #region Events
@@ -365,12 +373,11 @@ namespace NetFtp
                                 FileShare.Read))
                     {
                         fileStream.Seek(0L, SeekOrigin.Begin);
-                        // TODO: Add buffer size as property
-                        var buffer = new byte[128000];
+                        var buffer = new byte[BufferSize];
                         int bytesSent;
                         do
                         {
-                            bytesSent = fileStream.Read(buffer, 0, 128000);
+                            bytesSent = fileStream.Read(buffer, 0, BufferSize);
                             totalBytesSent += bytesSent;
                             requestStream.Write(buffer, 0, bytesSent);
 
@@ -469,11 +476,11 @@ namespace NetFtp
                     {
                         var streamReader = new StreamReader(fileStream);
                         streamReader.BaseStream.Seek(remFileSize, SeekOrigin.Begin);
-                        var buffer = new byte[128000];
+                        var buffer = new byte[BufferSize];
                         int count;
                         do
                         {
-                            count = streamReader.BaseStream.Read(buffer, 0, 128000);
+                            count = streamReader.BaseStream.Read(buffer, 0, BufferSize);
                             requestStream.Write(buffer, 0, count);
 
                             totalBytesSent += count;
@@ -564,11 +571,11 @@ namespace NetFtp
                         if (responseStream == null)
                             throw new WebException(
                                 "Response stream was not received properly");
-                        var buffer = new byte[128000];
+                        var buffer = new byte[BufferSize];
                         int count;
                         do
                         {
-                            count = responseStream.Read(buffer, 0, 128000);
+                            count = responseStream.Read(buffer, 0, BufferSize);
                             bytesReceived += count;
                             fileStream.Write(buffer, 0, count);
 
@@ -679,11 +686,11 @@ namespace NetFtp
                             throw new WebException(
                                 "Response stream was not received properly");
 
-                        var buffer = new byte[128000];
+                        var buffer = new byte[BufferSize];
                         int count;
                         do
                         {
-                            count = responseStream.Read(buffer, 0, 128000);
+                            count = responseStream.Read(buffer, 0, BufferSize);
                             totalBytes = fileInfo.Length + count;
                             fileStream.Write(buffer, 0, count);
 
